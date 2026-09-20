@@ -5,5 +5,5 @@ export default defineConfig({
  plugins: [react()],
  server: { watch: { ignored: ['**/raw/**', '**/artifacts/**'] } },
  resolve: { alias: { '@engine': fileURLToPath(new URL('./engine', import.meta.url)), '@': fileURLToPath(new URL('./src', import.meta.url)) } },
- test: { include: ['tests/**/*.test.ts'], environment: 'node' },
+ test: { include: ['tests/**/*.test.{ts,tsx}'], environment: 'node' },
 });

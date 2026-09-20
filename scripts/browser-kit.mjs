@@ -9,7 +9,7 @@ export async function browser(){
  const evaluate=async expression=>{const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails));return r.result.value;};
  await call('Page.enable');await call('Runtime.enable');await call('Network.enable');errors.length=0;
  const navigate=async(path,width=1280)=>{await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<640});await call('Page.navigate',{url:'http://127.0.0.1:5173'+path});await sleep(6000);};
- const capture=async name=>{await mkdir('artifacts/screenshots',{recursive:true});const r=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});await writeFile(`artifacts/screenshots/${name}.png`,Buffer.from(r.data,'base64'));};
+ const capture=async name=>{await mkdir('artifacts/screenshots',{recursive:true});const size=await evaluate('({width:innerWidth,height:innerHeight,full:document.documentElement.scrollHeight})');await call('Emulation.setDeviceMetricsOverride',{width:size.width,height:size.full,deviceScaleFactor:1,mobile:size.width<640});await sleep(500);const r=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(`artifacts/screenshots/${name}.png`,Buffer.from(r.data,'base64'));await call('Emulation.setDeviceMetricsOverride',{width:size.width,height:size.height,deviceScaleFactor:1,mobile:size.width<640});await sleep(200);};
  return {call,evaluate,navigate,capture,errors,close:()=>ws.close()};
 }
 export function check(condition,message){if(!condition)throw new Error(message);console.log('PASS '+message);}
