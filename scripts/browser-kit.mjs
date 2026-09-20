@@ -1,7 +1,7 @@
 import { writeFile,mkdir } from 'node:fs/promises';
 export const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 export async function browser(){
- const targets=await(await fetch('http://127.0.0.1:9223/json')).json();const target=targets.find(t=>t.type==='page');
+ const targets=await(await fetch('http://127.0.0.1:9223/json')).json();const target=targets.find(t=>t.type==='page'&&t.url.startsWith('http://127.0.0.1:5173'))??targets.find(t=>t.type==='page'&&!t.url.startsWith('edge://'));
  const ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise(r=>ws.addEventListener('open',r,{once:true}));
  let id=0;const pending=new Map(),errors=[];
  ws.addEventListener('message',e=>{const m=JSON.parse(e.data);if(m.id){pending.get(m.id)?.(m);pending.delete(m.id);}if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.exception?.description??m.params.exceptionDetails.text);});
