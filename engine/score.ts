@@ -1,7 +1,7 @@
 import type { Fix, FixOrigin, GapForecast, Reckoning, SectorKey, SessionInfo } from './types';
 import { clamp, mean, sha256Hex } from './stats';
 import { trustLabel } from './liquidity';
-export const MODEL_VERSION='1.0.0';
+export const MODEL_VERSION='1.1.0';
 export const SECTORS:SectorKey[]=['semis','megacap_tech','crypto_beta','consumer_growth','financials','software'];
 export function canonicalJson(value:unknown):string {
   if(value===null||typeof value!=='object')return JSON.stringify(value)??'null';

@@ -1,7 +1,7 @@
 import { mkdir,readFile,writeFile,mkdtemp,copyFile,stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect,test } from 'vitest';
-import { computeStats } from '@engine/score';
+import { computeStats, MODEL_VERSION } from '@engine/score';
 import { unpackAnalogs, type Artifact, type CompactAnalogs, type ParamsArtifact } from '@engine/artifacts';
 import type { Fix, Instrument } from '@engine/types';
 import { snapshot } from '../scripts/snapshot';
@@ -28,7 +28,7 @@ test('all six artifacts have headers and byte-identical bundled defaults',async(
     const a=await readFile(`public/data/${name}.json`,'utf8'),b=await readFile(`src/data/fallback/${name}.json`,'utf8');
     expect(a).toBe(b);
     const parsed=JSON.parse(a) as Artifact<unknown>;
-    expect(parsed).toMatchObject({schemaVersion:1,modelVersion:'1.0.0',source:'synthetic'});assertFinite(parsed);
+    expect(parsed).toMatchObject({schemaVersion:1,modelVersion:MODEL_VERSION,source:'synthetic'});assertFinite(parsed);
   }
 },15000);
 test('30,000 compact analogs fit below 2MB and contain all six window samples',async()=>{

@@ -6,6 +6,13 @@ import { ANCHORS, UNIVERSE } from '@/data/providers/anchors';
 import { instrument, knownParams, TS } from './helpers';
 import { ols } from '@engine/stats';
 import barsNvda from './fixtures/bars-nvda.json';
+test('forecast sigma includes discarded intercept and constrained-slope prediction error',()=>{
+  const rows:ReversionObservation[]=[-.02,0,.02].map(drift=>({symbol:'rNVDA',sector:'semis',label:'thin',drift,realisedGap:.03-.5*drift,ts:TS}));
+  const fit=estimateReversion(rows,'rNVDA','semis','thin');
+  expect(fit.kappa).toBeCloseTo(.5,12);
+  // Three actual predictor errors of .03, one fitted coefficient: sqrt(3*.03^2/2).
+  expect(fit.sigmaForecast).toBeCloseTo(Math.sqrt(3*.03**2/2),12);
+});
 test('known gap beta, leave-one-out gamma and single-member zero loading',()=>{
   const universe:Instrument[]=[{...instrument,symbol:'rQQQ',sector:'megacap_tech'},instrument,{...instrument,symbol:'rAMD'}, {...instrument,symbol:'rPLTR',sector:'software'}];
   const history:Record<string,DailyBar[]>={};

@@ -11,7 +11,11 @@ export function estimateReversion(observations:ReversionObservation[],symbol:str
   const rows=pooled?observations.filter(o=>o.sector===sector&&o.label===label):own;
   if(rows.length<3 || rows.every(r=>r.drift===rows[0]!.drift)) return {kappa:0,kappaStdErr:1,sigmaForecast:.03,nObs:rows.length,pooled};
   const fit=ols(rows.map(r=>r.drift),rows.map(r=>r.realisedGap));
-  return {kappa:clamp(-fit.slope,0,1),kappaStdErr:fit.slopeStdErr,sigmaForecast:Math.max(.0015,fit.residualStdErr),nObs:rows.length,pooled};
+  const kappa=clamp(-fit.slope,0,1);
+  // Forecasts use -kappa*drift, not OLS's intercept + unconstrained slope.
+  // Include bias and clipping error rather than reporting an unused fit's sigma.
+  const predictionError=Math.sqrt(rows.reduce((sum,r)=>sum+(r.realisedGap+kappa*r.drift)**2,0)/(rows.length-1));
+  return {kappa,kappaStdErr:fit.slopeStdErr,sigmaForecast:Math.max(.0015,predictionError),nObs:rows.length,pooled};
 }
 /** Select scalars for the current bucket; the binding InstrumentParams shape is unchanged. */
 export function selectParams(params:InstrumentParams,buckets:ReversionBuckets|undefined,label:TrustLabel):InstrumentParams {

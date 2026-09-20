@@ -30,13 +30,13 @@ await call('Network.setBlockedURLs', { urls: ['https://*'] });
 const width = Number(process.argv[3] ?? 1280);
 await call('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 640 });
 errors.length = 0;
-await call('Page.navigate', { url: 'http://127.0.0.1:5173/' });
-await new Promise(resolve => setTimeout(resolve, 1500));
+await call('Page.navigate', { url: `http://127.0.0.1:5173${process.argv[4] ?? '/'}` });
+await new Promise(resolve => setTimeout(resolve, 6000));
 const result = await call('Runtime.evaluate', {
   expression: `(async () => { await document.fonts.ready; return { title: document.title, background: getComputedStyle(document.body).backgroundColor, width: innerWidth, scrollWidth: document.documentElement.scrollWidth, fonts: [...document.fonts].map(f => ({family: f.family, weight: f.weight, status: f.status})), text: document.body.innerText }; })()`,
   awaitPromise: true, returnByValue: true,
 });
-console.log(JSON.stringify(result.result.value, null, 2));
+console.log(JSON.stringify({...result.result.value,text:result.result.value.text.slice(0,600)}, null, 2));
 if (result.result.value.background !== 'rgb(14, 22, 34)') throw new Error('Incorrect canvas color');
 if (result.result.value.scrollWidth > result.result.value.width) throw new Error('Horizontal overflow');
 if (errors.length || externalRequests.length) throw new Error(JSON.stringify({errors,externalRequests}));
