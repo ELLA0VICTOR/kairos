@@ -1,0 +1,15 @@
+import { context } from './pipeline-context';
+import { fetchHistory } from './fetch-history';
+import { buildParams } from './build-params';
+import { buildAnalogs } from './build-analogs';
+import { backfill } from './backfill';
+import { snapshot } from './snapshot';
+import { resolveLedger } from './resolve';
+const c=context();
+await fetchHistory(c);
+await buildParams(c);
+await buildAnalogs(c);
+await backfill(c);
+await snapshot(c);
+await resolveLedger(c);
+console.log(`Pipeline complete: ${new Date(c.asOf).toISOString()}, seed ${c.seed}. All artifacts copied to bundled fallbacks.`);

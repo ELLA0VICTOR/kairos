@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@font-face { font-family: "Spectral"; font-style: normal; font-weight: 300; font-display: swap; src: url("/fonts/spectral-300.woff2") format("woff2"); }
+@font-face { font-family: "Spectral"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/spectral-400.woff2") format("woff2"); }
+@font-face { font-family: "Spectral"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/spectral-500.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/archivo-400.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/archivo-500.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/archivo-600.woff2") format("woff2"); }
+:root {
+  /* Base — cold ink */
+  --ink:          #0E1622;   /* page canvas */
+  --ink-raised:   #16202E;   /* panels, table header, raised surfaces */
+  --ink-sunken:   #0A111A;   /* chart wells, inputs, table stripes */
+  --rule:         #223042;   /* default 1px borders */
+  --rule-strong:  #34475D;   /* emphasised borders, axis lines */
+
+  /* Type — warm bone */
+  --bone:         #E9E3D6;   /* primary text */
+  --bone-dim:     #9AA6B4;   /* secondary text, labels */
+  --bone-faint:   #647588;   /* tertiary, axis ticks, disabled */
+
+  /* Accent — brass. The only accent. Used sparingly. */
+  --brass:        #CDA349;
+  --brass-dim:    #8A6F32;
+  --brass-wash:   rgba(205,163,73,0.10);
+
+  /* Semantic — oxidised metals, never neon */
+  --verdigris:    #4F9C84;   /* cheap / reverted / hit / within band */
+  --rust:         #C05A47;   /* rich / miss / outside band */
+  --amber:        #D9963F;   /* stale data, low confidence, caution */
+
+  /* Focus */
+  --focus:        #7FB2E5;   /* keyboard focus ring only. Nothing else. */
+}
+
+@layer base {
+ body { margin: 0; background: var(--ink); color: var(--bone); font-family: Archivo, system-ui, sans-serif; font-variant-numeric: tabular-nums slashed-zero; font-feature-settings: "tnum" 1, "zero" 1; }
+ :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+ a:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

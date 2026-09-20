@@ -1,0 +1,13 @@
+import { writeFile } from 'node:fs/promises';
+import { buildFix, resolveFix } from '@engine/score';
+import { forecastGap } from '@engine/forecast';
+import { findAnalogs } from '@engine/analogs';
+import { reckon } from '@engine/reckon';
+import { normInv } from '@engine/stats';
+import { input, knownParams, TS } from '../tests/helpers';
+const x=input(),r=reckon(x);
+const analogs=findAnalogs({absDrift:Math.abs(r.drift),drift:r.drift,explainedShare:0,trust:.2,windowType:'weekend',sectorKey:'semis',windowProgress:.5,realisedVolRegime:1,newsCategory:null},[]);
+const fix=await buildFix({reckoning:r,forecast:forecastGap(r,knownParams,x.liquidity,analogs),session:x.session!,origin:'backtest',modelVersion:'1.0.0',loggedAt:TS});
+const rows=Array.from({length:200},(_,i)=>resolveFix({...fix,id:`fixture-${i}`},fix.tokenPrice*Math.exp(fix.forecast.median+.015*normInv((i+.5)/200)),fix.targetOpenTs));
+await writeFile('tests/fixtures/ledger-resolved.json',JSON.stringify(rows));
+console.log('Frozen 200 resolved fixes with evenly spaced normal quantiles.');
