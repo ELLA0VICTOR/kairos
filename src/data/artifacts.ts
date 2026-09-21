@@ -18,15 +18,16 @@ export function validateArtifact(value:unknown,name:string):Artifact<unknown>{
   if(!Number.isFinite(a.generatedAt)||!a.modelVersion||!['synthetic','live'].includes(a.source)||a.data===undefined)throw new Error(`${name}: invalid artifact header`);
   return a;
 }
-export async function loadArtifacts():Promise<LoadedArtifacts>{
-  const results=await Promise.allSettled(names.map(async name=>{
+export async function loadArtifacts(includeLedgers=true):Promise<LoadedArtifacts>{
+  const requestedNames=includeLedgers?names:names.filter(name=>!name.startsWith('ledger-'));
+  const results=await Promise.allSettled(requestedNames.map(async name=>{
     const response=await fetch(`${import.meta.env.VITE_DATA_BASE??''}/data/${name}.json`,{signal:AbortSignal.timeout(4000)});
     if(!response.ok)throw new Error(`${name}: HTTP ${response.status}`);
     return validateArtifact(await response.json(),name);
   }));
   const fallbacks:string[]=[],values:Record<string,Artifact<unknown>>={};
-  for(let i=0;i<names.length;i++){const name=names[i]!,result=results[i]!;
+  for(let i=0;i<requestedNames.length;i++){const name=requestedNames[i]!,result=results[i]!;
     if(result.status==='fulfilled')values[name]=result.value;
     else{fallbacks.push(`${name}: ${result.reason instanceof Error?result.reason.message:'unavailable'}`);values[name]=validateArtifact(await fallback(name),name);}}
-  return {generatedAt:values.snapshot!.generatedAt,fallbacks,data:{universe:values.universe!.data as Instrument[],params:values.params!.data as ParamsArtifact,analogs:unpackAnalogs(values.analogs!.data as CompactAnalogs),snapshot:values.snapshot!.data as Snapshot,ledgerLive:values['ledger-live']!.data as Fix[],ledgerBacktest:values['ledger-backtest']!.data as Fix[]}};
+  return {generatedAt:values.snapshot!.generatedAt,fallbacks,data:{universe:values.universe!.data as Instrument[],params:values.params!.data as ParamsArtifact,analogs:unpackAnalogs(values.analogs!.data as CompactAnalogs),snapshot:values.snapshot!.data as Snapshot,ledgerLive:(values['ledger-live']?.data??[]) as Fix[],ledgerBacktest:(values['ledger-backtest']?.data??[]) as Fix[]}};
 }
