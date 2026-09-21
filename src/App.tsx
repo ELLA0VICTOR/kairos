@@ -10,6 +10,7 @@ import { time } from '@/lib/format';
 import Window from '@/routes/Window';
 import Instrument from '@/routes/Instrument';
 import Record from '@/routes/Record';
+import Ask from '@/routes/Ask';
 const client=new QueryClient({defaultOptions:{queries:{refetchOnWindowFocus:false}}});
 function Footer(){const open=useMethod(),{generatedAt}=useDesk();return <footer className="footer"><span>kairos.</span><div><span>Simulated market data · Snapshot {time(generatedAt,'UTC','dd MMM HH:mm')} UTC</span>{replayTs!==undefined&&<span>Replay {time(replayTs,'UTC','dd MMM HH:mm')} UTC</span>}</div><button onClick={open}>Method & limitations ↗</button></footer>;}
 function Shell(){
@@ -23,7 +24,7 @@ function Shell(){
     <Route path="/instrument/:symbol" element={<Instrument/>}/>
     <Route path="/record" element={<Record/>}/>
     <Route path="/method" element={<><Window intro={false}/><OpenMethodRoute/></>}/>
-    <Route path="/ask" element={<div className="empty"><h1>Research, before the write-up.</h1><p>The research assistant is not enabled yet.</p><Link to="/">Explore the market ↗</Link></div>}/>
+    <Route path="/ask" element={<Ask/>}/>
     <Route path="*" element={<div className="empty"><h1>Outside the window.</h1><Link to="/">Return to markets ↗</Link></div>}/>
   </Routes></Boundary></main><Footer/></>;
 }

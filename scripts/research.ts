@@ -44,12 +44,13 @@ export function volatilityRegime(history:RawHistory,symbol:string,anchorTs:numbe
   const windows:number[]=[];for(let i=20;i<=xs.length;i++)windows.push(stdev(xs.slice(i-20,i)));
   return stdev(xs.slice(-20))/Math.max(.00001,median(windows));
 }
-export async function researchAt(provider:SyntheticProvider,history:RawHistory,params:ParamsArtifact,ts:number,index:AnalogRecord[]=[],withForecast=true):Promise<{samples:Sample[];news:NewsItem[];session:SessionInfo}> {
+export async function researchAt(provider:SyntheticProvider,history:RawHistory,params:ParamsArtifact,ts:number,index:AnalogRecord[]=[],withForecast=true,classifyNews?:(items:NewsItem[])=>Promise<NewsItem[]>):Promise<{samples:Sample[];news:NewsItem[];session:SessionInfo}> {
   const session=getSessionInfo(ts),quotes=(await provider.getQuotes(history.universe.map(i=>i.symbol),ts)).quotes;
   const quoteMap=new Map(quotes.map(q=>[q.symbol,q]));
   const anchors=Object.fromEntries(history.universe.map(i=>[i.symbol,provider.anchorPrice(i.symbol,session.anchorCloseTs)]));
   const returns=Object.fromEntries(quotes.map(q=>[q.symbol,Math.log(q.price/anchors[q.symbol]!)]));
-  const news=await provider.getNews(session.anchorCloseTs,undefined,ts),samples:Sample[]=[];
+  const rawNews=await provider.getNews(session.anchorCloseTs,undefined,ts);
+  const news=classifyNews?await classifyNews(rawNews):rawNews,samples:Sample[]=[];
   const equiv=sessionEquivalentHours(session.anchorCloseTs,ts);
   for(const instrument of history.universe) {
     const quote=quoteMap.get(instrument.symbol),anchorPrice=anchors[instrument.symbol],base=params.instruments[instrument.symbol];
