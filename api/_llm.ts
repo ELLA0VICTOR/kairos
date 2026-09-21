@@ -9,6 +9,15 @@ export interface LlmClient {
 }
 export const noneClient:LlmClient={id:'none',async *complete(){return;}};
 export class LanguageBudgetPaused extends Error {}
+/** Approximate input tokens, not a tokenizer or a hard billing guarantee.
+ * English/JSON uses three ASCII bytes per token with a safety allowance;
+ * non-ASCII bytes retain the conservative byte bound. Actual usage replaces it.
+ */
+export function estimatePromptTokens(args:Pick<Parameters<LlmClient['complete']>[0],'system'|'messages'|'tools'>):number {
+  const prompt=JSON.stringify({system:args.system,messages:args.messages,tools:args.tools});
+  const ascii=prompt.match(/[\x00-\x7f]/g)?.length??0;
+  return Math.ceil(ascii/3)+(Buffer.byteLength(prompt,'utf8')-ascii)+512;
+}
 class ChatCompletionsClient implements LlmClient {
   constructor(readonly id:'qwen'|'openai',private readonly key:string,private readonly base:string,private readonly model:string,private readonly transport:typeof fetch=fetch){}
   async *complete(args:Parameters<LlmClient['complete']>[0]):AsyncIterable<LlmChunk>{
@@ -43,9 +52,7 @@ export function getLlmClient():LlmClient {
   const client=qwen?new QwenClient(qwen,process.env.QWEN_BASE_URL,process.env.QWEN_MODEL):openai?new OpenAiClient(openai,process.env.OPENAI_MODEL?.trim()||'gpt-4o-mini'):noneClient;
   if(client.id==='none')return client;
   return {id:client.id,async *complete(args){
-    // UTF-8 bytes conservatively overestimate prompt tokens; reserve every round, including retries.
-    const promptBytes=Buffer.byteLength(JSON.stringify({system:args.system,messages:args.messages,tools:args.tools}),'utf8');
-    const reservation=promptBytes+args.maxTokens+512,reservedAt=Date.now();
+    const reservation=estimatePromptTokens(args)+args.maxTokens,reservedAt=Date.now();
     if(!reserveLanguageBudget(reservation,reservedAt))throw new LanguageBudgetPaused('Language service paused for today. Figures are unaffected.');
     let actual:number|undefined;
     try {for await(const chunk of client.complete(args)){if(chunk.type==='usage')actual=chunk.tokens;yield chunk;}}

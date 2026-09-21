@@ -93,6 +93,8 @@ In **Vercel → project → Settings → Environment Variables**, create `OPENAI
 
 Selection is **Qwen → OpenAI → deterministic templates**, based on configured keys. Failure of the selected provider returns templates instead of silently charging another provider. Research is capped at six tool calls, forty-five seconds and twenty requests per IP per hour. Rate and token counters are in-memory per warm function instance, **not a durable account-wide spending limit**. Set spending controls in the provider account before sharing a public demo.
 
+The token guard reserves estimated prompt tokens plus the maximum response, then replaces the estimate with provider-reported usage (including overages). Calls without a usage report retain their reservation. Estimation can differ from tokenization; this is a soft application limit. A budget-paused message refers to this guard, not the provider account's credit balance.
+
 Official guidance: [Vercel environment variables](https://vercel.com/docs/environment-variables) and [sensitive values](https://vercel.com/docs/environment-variables/sensitive-environment-variables).
 
 ### After deploying
