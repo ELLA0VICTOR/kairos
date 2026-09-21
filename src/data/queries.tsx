@@ -13,9 +13,9 @@ interface DeskState {data:ArtifactSet;board:Board;loading:boolean;error:string|n
 const Desk=createContext<DeskState|null>(null);
 export function DataProvider({children}:{children:React.ReactNode}){
   const {pathname}=useLocation(),includeLedgers=pathname==='/record'||pathname==='/ask';
-  const artifacts=useQuery({queryKey:['artifacts',includeLedgers],queryFn:()=>loadArtifacts(includeLedgers),staleTime:Infinity,retry:1});
+  const artifacts=useQuery({queryKey:['artifacts',includeLedgers],queryFn:()=>loadArtifacts(includeLedgers),staleTime:Infinity,retry:1,structuralSharing:false});
   const data=artifacts.data?.data??initialArtifacts;
-  const market=useQuery({queryKey:['market',replayTs,artifacts.dataUpdatedAt],enabled:!!artifacts.data,refetchInterval:30000,queryFn:()=>marketBoard(data,replayTs),retry:1});
+  const market=useQuery({queryKey:['market',replayTs,artifacts.dataUpdatedAt],enabled:!!artifacts.data,refetchInterval:30000,queryFn:()=>marketBoard(data,replayTs),retry:1,structuralSharing:false});
   // The snapshot already contains computed figures. Avoid repeating the engine on the UI
   // thread just to paint it; fresh calculations arrive from the existing market worker.
   const initial=useMemo<Board>(()=>({ts:data.snapshot.ts,session:data.snapshot.session,news:data.snapshot.news,frame:{ts:data.snapshot.ts,quotes:data.snapshot.rows.map(r=>r.quote),anchors:Object.fromEntries(data.snapshot.rows.map(r=>[r.instrument.symbol,r.reckoning.anchorPrice])),news:data.snapshot.news,candles:{}},rows:data.snapshot.rows.map(row=>{

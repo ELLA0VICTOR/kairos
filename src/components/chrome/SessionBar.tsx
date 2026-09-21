@@ -14,7 +14,7 @@ export function SessionBar({intro=false,compact=false}:{intro?:boolean;compact?:
   const regular=session.state==='regular';
   const start=regular?regularOpen(new Date(now)).getTime():session.anchorCloseTs,end=regular?regularClose(new Date(now)).getTime():session.nextOpenTs;
   const x=scale(start,end,1,width-1),current=Math.min(width-1,Math.max(1,x(now))),progress=Math.max(0,Math.min(1,(now-start)/(end-start)));
-  const points=useMemo(()=>{const values:Array<{ts:number;x:number;h:number}>=[];for(let ts=start;ts<end;ts+=HOUR/4)values.push({ts,x:x(ts),h:bandThickness(ts,end,regular)*.55});values.push({ts:end,x:width-1,h:15});return values;},[start,end,width,regular]);
+  const points=useMemo(()=>{const values:Array<{ts:number;x:number;h:number}>=[];if(compact)return values;for(let ts=start;ts<end;ts+=HOUR/4)values.push({ts,x:x(ts),h:bandThickness(ts,end,regular)*.55});values.push({ts:end,x:width-1,h:15});return values;},[start,end,width,regular,compact]);
   const path=line(points.map(p=>[p.x,22-p.h/2]))+' '+line([...points].reverse().map(p=>[p.x,22+p.h/2])).replace('M','L')+' Z';
   if(compact)return <section className="session-compact" aria-label="Exchange session"><span><i className="status-dot"/>{session.isDark?'EXCHANGE CLOSED':regular?'EXCHANGE OPEN':'EXTENDED HOURS'}</span><span>{regular?'Session ends':'Opening bell'} <strong>{time(end)} NY</strong></span><span className="compact-countdown" aria-live="off">{countdown(end-now)} remaining</span></section>;
   return <section className={`session-bar ${intro?'intro':''}`} aria-label="Exchange session">
