@@ -43,6 +43,7 @@ describe('deterministic research before language integration',()=>{
     expect(stripInlineDigits('up 12.4%, {{fig:price}} and ５')).toBe('up [unverified figure removed]%, {{fig:price}} and [unverified figure removed]');
     const n=templateResearchNote(parseIntent('rNVDA',data),data);
     expect(()=>validateResearchNote({...n,paragraphs:['{{fig:invented}}']},data)).toThrow('Unresolved');
+    expect(()=>validateResearchNote({...n,paragraphs:['The price is four hundred seventeen.']},data)).toThrow('Spelled-out numbers');
     const checked=validateResearchNote({...n,title:'Gain 99%',recommendation:{...n.recommendation,sizeCeilingPct:99,resolvesAt:1}},data);
     expect(checked.title).not.toMatch(/\d/);expect(checked.recommendation.sizeCeilingPct).toBe(0);expect(checked.recommendation.resolvesAt).toBe(data.snapshot.session.nextOpenTs);
   });

@@ -41,7 +41,7 @@ export function resolveFigure(ref:FigureRef,engine:EngineSnapshot):EngineFigure 
     const s=recordStats(engine,ref.origin,ref.trust);
     return {...base,value:ref.kind==='recordCount'?s.n:s.n?(ref.kind==='coverage'?s.bandCoverage:s.skillScore):null,format:ref.kind==='recordCount'?'count':'percent',source:`${ref.origin} ledger / ${ref.trust??'all'} trust`};
   }
-  const row=engine.snapshot.rows.find(r=>r.instrument.symbol===ref.symbol);if(!row)throw new Error('Unknown figure instrument');
+  const row=engine.snapshot.rows.find(r=>r.instrument.symbol===ref.symbol);if(!row)throw new Error(`Figure ${ref.name} (${ref.kind}) requires a covered canonical symbol such as rNVDA; received ${String(ref.symbol)}`);
   const r=row.reckoning,f=row.forecast;
   switch(ref.kind){
     case 'price':return {...base,value:r.tokenPrice,format:'price'};
@@ -119,6 +119,7 @@ export function validateResearchNote(value:unknown,engine:EngineSnapshot):Resear
   if(prose.join(' ').split(/\s+/).length>300)throw new Error('Research note exceeds prose limit');
   if(note.title.includes('{{'))throw new Error('Title must not contain figure references');
   for(const text of prose){
+    if(/\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion)\b/i.test(text.replace(/\{\{fig:[A-Za-z][A-Za-z0-9_]*\}\}/g,'')))throw new Error('Spelled-out numbers are prohibited in prose. Replace every numerical claim with its {{fig:name}} reference, including recommendation conditions.');
     for(const match of text.matchAll(/\{\{fig:([A-Za-z][A-Za-z0-9_]*)\}\}/g))if(!names.has(match[1]!))throw new Error('Unresolved figure');
     if(/[{}]/.test(text.replace(/\{\{fig:[A-Za-z][A-Za-z0-9_]*\}\}/g,'')))throw new Error('Malformed figure reference');
   }

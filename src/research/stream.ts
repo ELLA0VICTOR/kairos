@@ -1,10 +1,11 @@
 import { FALLBACK_LABEL,parseIntent,resolveFigure,templateResearchNote,validateResearchNote,type EngineFigure,type EngineSnapshot,type ResearchNote } from '../../engine/research';
 import { researchPlan,runTool } from '../../engine/research-tools';
-export interface ResearchResult {note:ResearchNote;figures:EngineFigure[];mode:'none'|'qwen';label:string;asOf:number;partial:boolean;notice?:string}
+export interface ResearchUsage {inputTokens:number;outputTokens:number;cachedInputTokens:number;totalTokens:number;completions:number}
+export interface ResearchResult {note:ResearchNote;figures:EngineFigure[];mode:'none'|'qwen'|'openai';label:string;asOf:number;partial:boolean;notice?:string;usage?:ResearchUsage}
 export type ResearchEvent={type:'step';data:{label:string;ms:number}}|{type:'prose';data:{delta:string}}|{type:'done';data:ResearchResult};
-export function researchResult(note:ResearchNote,data:EngineSnapshot,mode:'none'|'qwen'='none',notice?:string):ResearchResult {
+export function researchResult(note:ResearchNote,data:EngineSnapshot,mode:ResearchResult['mode']='none',notice?:string):ResearchResult {
   const checked=validateResearchNote(note,data);
-  return {note:checked,figures:checked.figures.map(ref=>resolveFigure(ref,data)),mode,label:mode==='none'?FALLBACK_LABEL:'Written with Qwen. Every figure comes from the engine.',asOf:data.snapshot.ts,partial:false,notice};
+  return {note:checked,figures:checked.figures.map(ref=>resolveFigure(ref,data)),mode,label:mode==='none'?FALLBACK_LABEL:`Written with ${mode==='qwen'?'Qwen':'OpenAI'}. Every figure comes from the engine.`,asOf:data.snapshot.ts,partial:false,notice};
 }
 export async function* noteEvents(result:ResearchResult):AsyncGenerator<ResearchEvent>{
   for(const paragraph of result.note.paragraphs){
