@@ -1,0 +1,65 @@
+name: Refresh market artifacts
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+    - cron: '0 14 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kairos-pipeline
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Restore permanent headline classifications
+        uses: actions/cache/restore@v4
+        with:
+          path: raw/news-classifications.json
+          key: news-classifications-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: news-classifications-
+      - name: Resolve eligible fixes and refresh snapshot
+        run: npx tsx scripts/scheduled-pipeline.ts
+        env:
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          QWEN_BASE_URL: https://hackathon.bitgetops.com/v1
+          QWEN_MODEL: qwen3.8-max
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4o-mini
+          QWEN_DAILY_TOKEN_BUDGET: '30000'
+      - name: Preserve new headline classifications
+        if: ${{ hashFiles('raw/news-classifications.json') != '' }}
+        uses: actions/cache/save@v4
+        with:
+          path: raw/news-classifications.json
+          key: news-classifications-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Commit generated artifacts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/data/snapshot.json public/data/ledger-live.json src/data/fallback/snapshot.json src/data/fallback/ledger-live.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh market snapshot and forward ledger'
+            git push origin HEAD:main
+          fi
+      - name: Refresh the Vercel deployment when configured
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$DEPLOY_HOOK" ]; then
+            curl --fail --silent --show-error --request POST "$DEPLOY_HOOK" > /dev/null
+          fi

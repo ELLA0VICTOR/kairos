@@ -8,7 +8,7 @@ export function context():PipelineContext {
   const asOf=process.env.KAIROS_AS_OF?Date.parse(process.env.KAIROS_AS_OF):Math.floor(Date.now()/600000)*600000;
   const seed=Number(process.env.KAIROS_SEED??20260927);
   if(!Number.isFinite(asOf)||!Number.isInteger(seed))throw new Error('Invalid KAIROS_AS_OF or KAIROS_SEED');
-  return {asOf,seed,root:process.cwd()};
+  return {asOf,seed,root:resolve(process.env.KAIROS_OUTPUT_ROOT??process.cwd())};
 }
 export function envelope<T>(data:T,c:PipelineContext):Artifact<T> {return {schemaVersion:SCHEMA_VERSION,generatedAt:c.asOf,modelVersion:MODEL_VERSION,source:'synthetic',data};}
 export async function writeJson(c:PipelineContext,path:string,data:unknown):Promise<void> {

@@ -28,6 +28,7 @@ dist-ssr
 !.env.example
 raw/
 *.tsbuildinfo
+.vercel/
 
 # Local build specifications and working notes (keep on disk, never publish)
 /*.md

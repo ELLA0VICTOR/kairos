@@ -2,6 +2,8 @@
   "name": "kairos",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
   "type": "module",
   "scripts": {
     "dev": "vite",

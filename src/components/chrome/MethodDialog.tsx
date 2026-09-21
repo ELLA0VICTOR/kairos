@@ -2,6 +2,7 @@ import { createContext,useContext,useEffect,useRef,useState,type ReactNode } fro
 import { Link } from 'react-router-dom';
 import { useDesk } from '@/data/queries';
 import { pct,price } from '@/lib/format';
+import { MethodContent } from './MethodContent';
 const Guide = createContext<()=>void>(()=>{});
 export const useMethod = ()=>useContext(Guide);
 const steps = [
@@ -26,6 +27,7 @@ export function MethodProvider({children}:{children:ReactNode}){
           </div><p className="guide-note">{item.note}</p>
         </section>
         <footer className="guide-footer"><span>{step===2?'The record is the test.':'An estimate. Always with uncertainty.'}</span>{step<2?<button className="button primary" onClick={()=>setStep(step+1)}>Continue <span>↗</span></button>:<Link className="button primary" to="/record" onClick={()=>setOpen(false)}>Explore the record <span>↗</span></Link>}</footer>
+        <MethodContent onNavigate={()=>setOpen(false)}/>
       </div>
     </dialog>
   </Guide.Provider>;
