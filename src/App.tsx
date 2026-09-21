@@ -1,21 +1,30 @@
 import { useEffect,useRef,useState } from 'react';
 import { BrowserRouter,Link,Route,Routes,useLocation } from 'react-router-dom';
 import { QueryClient,QueryClientProvider } from '@tanstack/react-query';
-import { DataProvider } from '@/data/queries';
+import { DataProvider,replayTs,useDesk } from '@/data/queries';
 import { Masthead } from '@/components/chrome/Masthead';
-import { SessionBar } from '@/components/chrome/SessionBar';
+import { MethodProvider,OpenMethodRoute,useMethod } from '@/components/chrome/MethodDialog';
 import { Boundary } from '@/components/primitives';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { time } from '@/lib/format';
 import Window from '@/routes/Window';
 import Instrument from '@/routes/Instrument';
 import Record from '@/routes/Record';
 const client=new QueryClient({defaultOptions:{queries:{refetchOnWindowFocus:false}}});
-function ScopePage({ask=false}:{ask?:boolean}){return <article className="method-copy"><h1>{ask?'Research, before the write-up':'How the reckoning works'}</h1>{ask?<><p>The language research surface is not enabled in this checkpoint. The computed evidence is available on the board, instrument pages, and public record.</p><Link to="/">Read the current window</Link></>:<><p>Kairos estimates where a tokenized stock stands while its exchange is dark. It begins at the last official close, then follows index tokens, sector peers, and observable news.</p><h2>A band, not a price target</h2><p>Fair value equals the anchor multiplied by exp(beta × market + gamma × sector + news). The band combines uncertainty in parameters, time, news, and liquidity. It is an estimate, not a tradable quote.</p><h2>When the exchange is open</h2><p>Reckoning pauses during regular and extended sessions, including Friday evening through 20:00 New York. The anchor remains the official close, including 13:00 on half-days.</p><h2>A record that can be checked</h2><p>Fixes are logged once per hour only when absolute drift exceeds 0.4%. They resolve at the next opening bell. Corporate actions void affected fixes. Backtest and forward records are never pooled.</p><p>All current data is synthetic. Historical token paths are reconstructed simulations. Model 1.1.0 corrects forecast uncertainty to measure errors around the predictor actually used; simulated backtest coverage remains below its target. The Record publishes that shortfall.</p><h2>What we cannot see</h2><p>Order book depth, positioning, options pricing, and news outside our feed. An unexplained move with real volume may contain information we cannot observe.</p><p>Rounded forecast panels mean judgement rather than measurement. The interface has no light mode: it is for the hours when the lights are off.</p></>}</article>;}
+function Footer(){const open=useMethod(),{generatedAt}=useDesk();return <footer className="footer"><span>kairos.</span><div><span>Simulated market data · Snapshot {time(generatedAt,'UTC','dd MMM HH:mm')} UTC</span>{replayTs!==undefined&&<span>Replay {time(replayTs,'UTC','dd MMM HH:mm')} UTC</span>}</div><button onClick={open}>Method & limitations ↗</button></footer>;}
 function Shell(){
- const location=useLocation(),reduced=useReducedMotion(),seen=useRef(false),[intro,setIntro]=useState(()=>location.pathname==='/'&&!reduced),[lastSymbol,setLastSymbol]=useState('rNVDA');
- useEffect(()=>{if(location.pathname==='/'){if(!seen.current){seen.current=true;setIntro(!reduced);}}},[location.pathname,reduced]);
- useEffect(()=>{if(!intro)return;const id=setTimeout(()=>setIntro(false),950);return()=>clearTimeout(id);},[intro]);
- useEffect(()=>{const symbol=location.pathname.match(/^\/instrument\/([^/]+)/)?.[1];if(symbol)setLastSymbol(symbol);},[location.pathname]);
- return <><Masthead lastSymbol={lastSymbol}/><SessionBar intro={intro&&location.pathname==='/'}/><main id="main" tabIndex={-1} className="page"><Boundary key={location.pathname.split('/')[1]??'window'} name={location.pathname}><Routes><Route path="/" element={<Window intro={intro}/>}/><Route path="/instrument/:symbol" element={<Instrument/>}/><Route path="/record" element={<Record/>}/><Route path="/method" element={<ScopePage/>}/><Route path="/ask" element={<ScopePage ask/>}/><Route path="*" element={<div className="empty"><h1>This research view is being prepared</h1><p>The current window is available.</p><Link to="/">Return to the board</Link></div>}/></Routes></Boundary></main><footer className="footer"><span>Kairos</span><span>Observed. Reckoned. Accounted for.</span><span>Synthetic research, not investment advice.</span></footer></>;
+  const location=useLocation(),reduced=useReducedMotion(),seen=useRef(false);
+  const [intro,setIntro]=useState(()=>location.pathname==='/'&&!reduced),[lastSymbol,setLastSymbol]=useState('rNVDA');
+  useEffect(()=>{if(location.pathname==='/'&&!seen.current){seen.current=true;setIntro(!reduced);}},[location.pathname,reduced]);
+  useEffect(()=>{if(!intro)return;const timer=setTimeout(()=>setIntro(false),1100);return()=>clearTimeout(timer);},[intro]);
+  useEffect(()=>{const symbol=location.pathname.match(/^\/instrument\/([^/]+)/)?.[1];if(symbol)setLastSymbol(symbol);},[location.pathname]);
+  return <><Masthead lastSymbol={lastSymbol}/><main id="main" tabIndex={-1} className="page"><Boundary key={location.pathname.split('/')[1]??'window'} name={location.pathname}><Routes>
+    <Route path="/" element={<Window intro={intro}/>}/>
+    <Route path="/instrument/:symbol" element={<Instrument/>}/>
+    <Route path="/record" element={<Record/>}/>
+    <Route path="/method" element={<><Window intro={false}/><OpenMethodRoute/></>}/>
+    <Route path="/ask" element={<div className="empty"><h1>Research, before the write-up.</h1><p>The research assistant is not enabled yet.</p><Link to="/">Explore the market ↗</Link></div>}/>
+    <Route path="*" element={<div className="empty"><h1>Outside the window.</h1><Link to="/">Return to markets ↗</Link></div>}/>
+  </Routes></Boundary></main><Footer/></>;
 }
-export default function App(){return <QueryClientProvider client={client}><BrowserRouter><DataProvider><Shell/></DataProvider></BrowserRouter></QueryClientProvider>;}
+export default function App(){return <QueryClientProvider client={client}><BrowserRouter><DataProvider><MethodProvider><Shell/></MethodProvider></DataProvider></BrowserRouter></QueryClientProvider>;}

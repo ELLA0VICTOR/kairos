@@ -1,8 +1,16 @@
 import { NavLink } from 'react-router-dom';
 import { useSession } from '@/hooks/useSession';
-import { replayTs,useDesk } from '@/data/queries';
-import { age,time } from '@/lib/format';
+import { time } from '@/lib/format';
+import { BrandMark } from '@/components/primitives/Icon';
+import { useMethod } from './MethodDialog';
+
 export function Masthead({lastSymbol}:{lastSymbol:string}){
-  const {wallNow}=useSession(),{generatedAt}=useDesk(),elapsed=Math.max(0,wallNow-generatedAt);
-  return <><a className="skip" href="#main">Skip to main content</a><header className="masthead"><div className="masthead-inner"><NavLink to="/" className="wordmark" aria-label="Kairos home">Kairos</NavLink><nav aria-label="Main navigation"><NavLink to="/" end>Window</NavLink><NavLink to={`/instrument/${lastSymbol}`}>Instrument</NavLink><NavLink to="/record">Record</NavLink><NavLink to="/ask">Ask</NavLink><NavLink to="/method">Method</NavLink></nav><div className="masthead-meta"><span className={elapsed>7200000?'tone-rust':elapsed>1800000?'tone-amber':''}>{generatedAt>wallNow?'Snapshot '+time(generatedAt,'UTC','dd MMM HH:mm')+' UTC':'Snapshot '+age(elapsed)+' old'}</span><span>{time(wallNow,'UTC','HH:mm')} UTC / {time(wallNow,'America/New_York','HH:mm')} NY</span></div></div></header><div className="demo-banner">Demo mode — synthetic data. Live data resumes when the Bitget feed reconnects.{replayTs!==undefined&&<span> Replay: {time(replayTs,'UTC','dd MMM yyyy HH:mm')} UTC.</span>}</div></>;
+  const {wallNow}=useSession(),openMethod=useMethod();
+  return <><a className="skip" href="#main">Skip to main content</a>
+    <header className="masthead"><div className="masthead-inner">
+      <NavLink to="/" className="wordmark" aria-label="Kairos home"><BrandMark/><span>kairos<span className="wordmark-dot">.</span></span></NavLink>
+      <nav aria-label="Main navigation"><NavLink to="/" end>Markets</NavLink><NavLink to={`/instrument/${lastSymbol}`}>Instrument</NavLink><NavLink to="/record">The record</NavLink></nav>
+      <div className="masthead-right"><span className="nav-clock">NYC <strong>{time(wallNow,'America/New_York','HH:mm:ss')}</strong></span><button className="method-trigger" onClick={openMethod}>How it works <span>↗</span></button></div>
+    </div></header>
+  </>;
 }
