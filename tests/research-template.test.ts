@@ -19,6 +19,12 @@ describe('deterministic research before language integration',()=>{
   it('branches for quiet, thin, deep unexplained, sparse evidence, stale and open sessions',()=>{
     for(const kind of cases.map(c=>c[1]))for(const mode of ['quiet','thin','deep','sparse','stale','open']){
       const d=structuredClone(data),r=d.snapshot.rows.find(r=>r.instrument.symbol==='rTSLA')!;
+      // The checked-in snapshot moves with the scheduled pipeline. Each branch
+      // starts from a usable dark-window observation, independent of run time.
+      d.snapshot.session.isDark=true;r.stale=false;
+      r.reckoning.bandLow=r.reckoning.reckonedValue*.99;
+      r.reckoning.bandHigh=r.reckoning.reckonedValue*1.01;
+      r.forecast={symbol:'rTSLA',ts:d.snapshot.ts,median:0,p10:-.01,p90:.01,pTokenFalls:.5,analogCount:40,baseline:0};
       if(mode==='quiet'){r.reckoning.tokenPrice=r.reckoning.reckonedValue;r.reckoning.drift=0;}
       if(mode==='thin')r.reckoning.trustLabel='thin';
       if(mode==='deep'){r.reckoning.trustLabel='deep';r.reckoning.components={total:.05,market:0,sector:0,news:0,unaccounted:.05,newsDrivers:[]};}

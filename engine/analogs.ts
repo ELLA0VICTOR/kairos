@@ -1,5 +1,5 @@
-import type { NewsCategory, SectorKey, Symbol } from './types';
-import { median, stdev } from './stats';
+import type { NewsCategory, SectorKey, Symbol } from './types.js';
+import { median, stdev } from './stats.js';
 export interface AnalogFeatures {
   absDrift:number; drift:number; explainedShare:number;trust:number;
   windowType:'overnight'|'weekend'|'holiday';sectorKey:SectorKey;windowProgress:number;

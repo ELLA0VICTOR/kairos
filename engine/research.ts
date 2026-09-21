@@ -1,7 +1,7 @@
-import type { ArtifactSet, SnapshotRow } from './artifacts';
-import { explainedShare } from './attribute';
-import { computeStats } from './score';
-import { trustLabel } from './liquidity';
+import type { ArtifactSet, SnapshotRow } from './artifacts.js';
+import { explainedShare } from './attribute.js';
+import { computeStats } from './score.js';
+import { trustLabel } from './liquidity.js';
 
 export type IntentKind='single_name'|'compare'|'scan_board'|'risk_of_holding'|'trust_the_model';
 export interface ParsedIntent {kind:IntentKind;symbols:string[];unsupported:string[];portfolioShared:boolean}

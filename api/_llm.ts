@@ -1,4 +1,4 @@
-import { reserveLanguageBudget,reconcileLanguageBudget } from './_guards';
+import { reserveLanguageBudget,reconcileLanguageBudget } from './_guards.js';
 export interface ToolSpec { name:string; description:string; parameters:Record<string,unknown> }
 export interface ToolCall { id:string; name:string; arguments:string }
 export interface Message { role:'user'|'assistant'|'tool'; content:string|null; tool_call_id?:string; tool_calls?:Array<{id:string;type:'function';function:{name:string;arguments:string}}> }

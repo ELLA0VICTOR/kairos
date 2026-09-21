@@ -9,6 +9,8 @@ export default defineConfig({
    server.middlewares.use('/api/ask',async(req,res)=>{try{const endpoint=await server.ssrLoadModule('/api/ask.ts');await endpoint.default(req,res);}catch{res.statusCode=503;res.end('Research service unavailable.');}});
    server.middlewares.use('/api/quotes',async(req,res)=>{const endpoint=await server.ssrLoadModule('/api/quotes.ts');await endpoint.default(req,res);});
  }}],
+ // Scan only the app entry, not HTML stored in local browser-test profiles.
+ optimizeDeps: { entries: ['index.html'] },
  server: { watch: { ignored: ['**/raw/**', '**/artifacts/**'] } },
  resolve: { alias: { '@engine': fileURLToPath(new URL('./engine', import.meta.url)), '@': fileURLToPath(new URL('./src', import.meta.url)) } },
  test: { include: ['tests/**/*.test.{ts,tsx}'], environment: 'node' },

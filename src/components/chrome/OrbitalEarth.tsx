@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const vertex = `attribute vec2 position; varying vec2 uv;
@@ -46,7 +46,7 @@ void main(){
 }`;
 
 /** A native WebGL globe. No scene framework, network runtime, or React frame loop. */
-export function OrbitalEarth() {
+export const OrbitalEarth = memo(function OrbitalEarth() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const angleRef = useRef(1.7);
   const reduced = useReducedMotion();
@@ -79,6 +79,9 @@ export function OrbitalEarth() {
     const textures: WebGLTexture[] = [];
     const draw = (ts: number) => {
       if (disposed) return;
+      // The slow orbit needs only 30fps; avoid redrawing the full shader at
+      // high-refresh display rates. Rotation still uses elapsed time.
+      if (!reduced && !paused && last && ts-last<1000/30) {frame=requestAnimationFrame(draw);return;}
       if (visible && !document.hidden) {
         if (!paused && !reduced && last) angle += Math.min(ts-last, 60) * .000018;
         pointer[0]! += (target[0]! - pointer[0]!) * .04; pointer[1]! += (target[1]! - pointer[1]!) * .04;
@@ -126,4 +129,4 @@ export function OrbitalEarth() {
     <span className="orbital-label orbital-label-two"><i/>NEW YORK · 40.71° N</span>
     {!reduced&&<button className="orbit-control" onClick={()=>setPaused(!paused)} aria-label={paused?'Resume globe motion':'Pause globe motion'}>{paused?'PLAY':'PAUSE'} <span>{paused?'▷':'Ⅱ'}</span></button>}
   </div>;
-}
+});

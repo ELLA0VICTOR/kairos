@@ -21,7 +21,12 @@ describe('research service boundaries',()=>{
   });
   it('retries malformed final output once then falls back without leaking raw prose',async()=>{
     let calls=0;const client:LlmClient={id:'qwen',async *complete(){calls++;yield {type:'text',delta:'Buy 900 shares at 99.9 now'};}};
-    const events=await collect(client);expect(calls).toBe(2);expect(JSON.stringify(events)).not.toContain('900');expect(events.at(-1)).toMatchObject({type:'done',data:{mode:'none'}});
+    const events=await collect(client);expect(calls).toBe(2);
+    // Engine timestamps/figures may legitimately contain 900; inspect prose itself.
+    const prose=events.filter(e=>e.type==='prose').map(e=>e.data.delta).join('');
+    expect(prose).not.toContain('Buy 900 shares');
+    expect(prose.replace(/\{\{fig:[^}]+\}\}/g,'')).not.toMatch(/\d/);
+    expect(events.at(-1)).toMatchObject({type:'done',data:{mode:'none'}});
   });
   it('stops a noncooperative upstream at the wall-clock cap and returns findings',async()=>{
     const client:LlmClient={id:'qwen',async *complete(){await new Promise(()=>{});}};

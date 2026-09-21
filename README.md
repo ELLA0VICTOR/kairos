@@ -200,6 +200,8 @@ Tools cover session, board, reckoning, attribution, forecast, analogs, news and 
 
 ## Verification
 
+Run `npm test`, `npm run check:api`, and `npm run build` before deploying. The API smoke check emits the server dependency graph and starts it in plain Node, without Vite or tsx resolving imports. It verifies saved quotes and streamed, key-free Ask responses; it does not contact a language provider. Relative imports in the server graph use explicit `.js` extensions so the emitted ESM works in Vercel's Node runtime.
+
 `npm test` covers statistics, DST and holiday boundaries, seeded scenarios, attribution conservation, intervals, separate ledgers, pipeline deduplication and research validation. Browser checks use installed Edge through CDP. Screenshots and audit reports are saved under ignored `artifacts/`.
 
 Real OpenAI testing showed why runtime checks matter: the model initially wrote prices as words. Validation now rejects that form too, and browser checks inspect the final DOM. Qwen’s gateway remains untested pending credentials.

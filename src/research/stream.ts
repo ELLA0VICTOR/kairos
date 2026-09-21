@@ -1,5 +1,5 @@
-import { FALLBACK_LABEL,parseIntent,resolveFigure,templateResearchNote,validateResearchNote,type EngineFigure,type EngineSnapshot,type ResearchNote } from '../../engine/research';
-import { researchPlan,runTool } from '../../engine/research-tools';
+import { FALLBACK_LABEL,parseIntent,resolveFigure,templateResearchNote,validateResearchNote,type EngineFigure,type EngineSnapshot,type ResearchNote } from '../../engine/research.js';
+import { researchPlan,runTool } from '../../engine/research-tools.js';
 export interface ResearchUsage {inputTokens:number;outputTokens:number;cachedInputTokens:number;totalTokens:number;completions:number}
 export interface ResearchResult {note:ResearchNote;figures:EngineFigure[];mode:'none'|'qwen'|'openai';label:string;asOf:number;partial:boolean;notice?:string;usage?:ResearchUsage}
 export type ResearchEvent={type:'step';data:{label:string;ms:number}}|{type:'prose';data:{delta:string}}|{type:'done';data:ResearchResult};

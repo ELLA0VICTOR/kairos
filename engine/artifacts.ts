@@ -1,8 +1,8 @@
-import type { AnalogFeatures, AnalogRecord } from './analogs';
-import type { CorporateAction } from './score';
-import type { ReversionBuckets } from './params';
-import type { DailyBar, Fix, GapForecast, Instrument, InstrumentParams, NewsItem, Quote, Reckoning, SessionInfo } from './types';
-import type { LiquidityAssessment } from './liquidity';
+import type { AnalogFeatures, AnalogRecord } from './analogs.js';
+import type { CorporateAction } from './score.js';
+import type { ReversionBuckets } from './params.js';
+import type { DailyBar, Fix, GapForecast, Instrument, InstrumentParams, NewsItem, Quote, Reckoning, SessionInfo } from './types.js';
+import type { LiquidityAssessment } from './liquidity.js';
 export const SCHEMA_VERSION=1;
 export interface Artifact<T> {schemaVersion:1;generatedAt:number;modelVersion:string;source:'live'|'synthetic';data:T}
 export interface ExpectedVolume {symbol:string;windowType:AnalogFeatures['windowType'];hourBucket:number;median:number;nObs:number}

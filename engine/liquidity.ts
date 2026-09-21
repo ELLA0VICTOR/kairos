@@ -1,6 +1,6 @@
-import type { Quote } from './types';
-import { clamp } from './stats';
-import { cleanQuote, noVolumeMove } from './quality';
+import type { Quote } from './types.js';
+import { clamp } from './stats.js';
+import { cleanQuote, noVolumeMove } from './quality.js';
 export interface LiquidityAssessment {
   volumeSinceClose:number|null; expectedVolume:number; volumeRatio:number; spreadBps:number|null;
   trust:number; label:'thin'|'moderate'|'deep'; reasons:string[];

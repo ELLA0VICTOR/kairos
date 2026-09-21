@@ -1,4 +1,4 @@
-import type { InstrumentParams, Quote } from './types';
+import type { InstrumentParams, Quote } from './types.js';
 export const isStaleQuote = (quote: Quote, now: number): boolean => now - quote.ts > 15 * 60_000;
 export const isAbsurdDrift = (drift: number): boolean => !Number.isFinite(drift) || Math.abs(drift) > .25;
 export const hasAnchor = (price: number | null | undefined): price is number => typeof price === 'number' && Number.isFinite(price) && price > 0;

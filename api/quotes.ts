@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { IncomingMessage,ServerResponse } from 'node:http';
-import type { Artifact,Snapshot } from '../engine/artifacts';
-import { SCHEMA_VERSION } from '../engine/artifacts';
+import type { Artifact,Snapshot } from '../engine/artifacts.js';
+import { SCHEMA_VERSION } from '../engine/artifacts.js';
 let cache:Artifact<Snapshot>|undefined,loadedAt=0;
 /** Phase 9 serves the committed snapshot honestly; live upstream integration belongs to Phase 10. */
 export default async function quotes(req:IncomingMessage,res:ServerResponse):Promise<void>{

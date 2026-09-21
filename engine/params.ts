@@ -1,6 +1,6 @@
-import type { DailyBar, Instrument, InstrumentParams, SectorKey } from './types';
-import type { LiquidityAssessment } from './liquidity';
-import { clamp, median, ols, stdev } from './stats';
+import type { DailyBar, Instrument, InstrumentParams, SectorKey } from './types.js';
+import type { LiquidityAssessment } from './liquidity.js';
+import { clamp, median, ols, stdev } from './stats.js';
 export type TrustLabel = LiquidityAssessment['label'];
 export interface ReversionObservation {symbol:string;sector:SectorKey;label:TrustLabel;drift:number;realisedGap:number;ts:number}
 export interface ReversionFit {kappa:number;kappaStdErr:number;sigmaForecast:number;nObs:number;pooled:boolean}

@@ -58,7 +58,12 @@ test('snapshot twice within the same hour cannot duplicate forward fixes',async(
   expect(second).toEqual(first);
 },20000);
 test('pipeline resolves only after the bell, voids splits, and preserves the original forecast',async()=>{
-  const c=await isolatedContext(),original=(await readArtifact<Fix[]>(c,'ledger-live')).data;
+  const c=await isolatedContext(),existing=await readArtifact<Fix[]>(c,'ledger-live');
+  // Hosted refreshes resolve the committed ledger. Generate open fixes at the
+  // fixed test timestamp instead of assuming today's artifact is still open.
+  await writeFile(join(c.root,'public/data/ledger-live.json'),JSON.stringify({...existing,data:[]}));
+  await snapshot(c);
+  const original=(await readArtifact<Fix[]>(c,'ledger-live')).data;
   const f=original[0]!;expect(f).toBeDefined();
   await resolveLedger(c);expect((await readArtifact<Fix[]>(c,'ledger-live')).data).toEqual(original);
   const params=await readArtifact<ParamsArtifact>(c,'params');params.data.corporateActions=[{symbol:f.symbol,effectiveTs:f.targetOpenTs,kind:'split'}];

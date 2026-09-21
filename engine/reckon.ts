@@ -1,8 +1,8 @@
-import type { Attribution, Instrument, InstrumentParams, Quote, Reckoning, SessionInfo } from './types';
-import type { LiquidityAssessment } from './liquidity';
-import { getSessionInfo } from './calendar';
-import { clamp, normInv } from './stats';
-import { cleanQuote, guardBand, hasAnchor, staleParams } from './quality';
+import type { Attribution, Instrument, InstrumentParams, Quote, Reckoning, SessionInfo } from './types.js';
+import type { LiquidityAssessment } from './liquidity.js';
+import { getSessionInfo } from './calendar.js';
+import { clamp, normInv } from './stats.js';
+import { cleanQuote, guardBand, hasAnchor, staleParams } from './quality.js';
 export interface ReckonInput {
   instrument:Instrument;params:InstrumentParams;anchorPrice:number;tokenPrice:number;
   marketFactorReturn:number;sectorFactorReturn:number;newsImpact:number;newsUncertainty:number;

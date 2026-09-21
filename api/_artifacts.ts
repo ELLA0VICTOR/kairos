@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { SCHEMA_VERSION,unpackAnalogs,type ArtifactSet,type CompactAnalogs,type ParamsArtifact,type Snapshot } from '../engine/artifacts';
-import type { Fix,Instrument } from '../engine/types';
+import { SCHEMA_VERSION,unpackAnalogs,type ArtifactSet,type CompactAnalogs,type ParamsArtifact,type Snapshot } from '../engine/artifacts.js';
+import type { Fix,Instrument } from '../engine/types.js';
 async function artifact<T>(name:string):Promise<T>{
   const raw:unknown=JSON.parse(await readFile(resolve(process.cwd(),'public/data',name+'.json'),'utf8'));
   if(!raw||typeof raw!=='object'||!('schemaVersion' in raw)||raw.schemaVersion!==SCHEMA_VERSION||!('data' in raw))throw new Error('Invalid research artifact');

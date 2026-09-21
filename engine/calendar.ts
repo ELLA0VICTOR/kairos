@@ -1,6 +1,6 @@
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
-import type { SessionInfo, SessionState } from './types';
-import { clamp } from './stats';
+import type { SessionInfo, SessionState } from './types.js';
+import { clamp } from './stats.js';
 
 export const NYSE_TZ = 'America/New_York';
 // NYSE/ICE published calendar, retrieved 2026-09-20. User-specified extended

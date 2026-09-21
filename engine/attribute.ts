@@ -1,6 +1,6 @@
-import type { Attribution, Reckoning } from './types';
-import { decompose, type ReckonInput } from './reckon';
-import { clamp } from './stats';
+import type { Attribution, Reckoning } from './types.js';
+import { decompose, type ReckonInput } from './reckon.js';
+import { clamp } from './stats.js';
 export function attribute(input:ReckonInput,_reckoning:Reckoning):Attribution { return decompose(input); }
 export function explainedShare(a:Attribution):number { return Math.abs(a.total)<1e-6?1:clamp(1-Math.abs(a.unaccounted)/Math.abs(a.total)); }
 export function attributionSentence(a:Attribution,trust:number):string {

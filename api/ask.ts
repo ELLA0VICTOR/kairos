@@ -1,8 +1,8 @@
 import type { IncomingMessage,ServerResponse } from 'node:http';
-import { getLlmClient } from './_llm';
-import { research } from './_research';
-import { loadResearchArtifacts } from './_artifacts';
-import { rateAllowed } from './_guards';
+import { getLlmClient } from './_llm.js';
+import { research } from './_research.js';
+import { loadResearchArtifacts } from './_artifacts.js';
+import { rateAllowed } from './_guards.js';
 export const config={maxDuration:60};
 export default async function ask(req:IncomingMessage&{body?:unknown},res:ServerResponse):Promise<void>{
   res.setHeader('Cache-Control','no-store');

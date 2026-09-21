@@ -1,7 +1,7 @@
-import { findAnalogs } from './analogs';
-import { explainedShare } from './attribute';
-import { HOUR } from './calendar';
-import { rankedRows,recordStats,type EngineSnapshot,type FigureRef,type ParsedIntent } from './research';
+import { findAnalogs } from './analogs.js';
+import { explainedShare } from './attribute.js';
+import { HOUR } from './calendar.js';
+import { rankedRows,recordStats,type EngineSnapshot,type FigureRef,type ParsedIntent } from './research.js';
 const symbol={type:'string',description:'A covered canonical rToken symbol'};
 const limit={type:'integer',minimum:1,maximum:80};
 const spec=(name:string,description:string,properties:Record<string,unknown>,required:string[]=[])=>({name,description,parameters:{type:'object',properties,required,additionalProperties:false}});
