@@ -1,0 +1,18 @@
+﻿Kairos visual assets
+
+Earth day texture:
+https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg
+Earth night texture:
+https://threejs.org/examples/textures/planets/earth_lights_2048.png
+NASA Blue Marble background:
+https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/
+
+Company marks:
+https://companiesmarketcap.com/img/company-logos/64/{TICKER}.png
+GOOGL uses the GOOG mark. SPY and QQQ use their fund issuers' marks (STT and IVZ).
+Marks identify the underlying companies or fund issuers; they do not imply endorsement.
+
+Space Grotesk and IBM Plex Mono are self-hosted Google Fonts distributions.
+Their SIL Open Font Licenses are included in public/fonts/.
+
+The Earth is an illustrative animation, not a live satellite feed or a geographic market-data visualization.
