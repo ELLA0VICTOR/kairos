@@ -5,6 +5,20 @@ import type { Fix } from '../engine/types';
 import { parseIntent,templateResearchNote,validateResearchNote,resolveFigure,stripInlineDigits,type IntentKind } from '../engine/research';
 const data={...initialArtifacts,ledgerBacktest:ledger.data as Fix[]};
 describe('deterministic research before language integration',()=>{
+  it.each([
+    'Explain the risk of holding rNVda UNTILL THE STOCK MARKET OPENS AGAIN',
+    'EXPLAIN THE RISK OF HOLDING RNVDA UNTIL THE STOCK MARKET OPENS AGAIN',
+    'Explain the risks of holding nvda until the stock market opens again',
+  ])('accepts ordinary capitalization and spelling in %s',question=>{
+    const intent=parseIntent(question,data);
+    expect(intent.symbols).toEqual(['rNVDA']);
+    expect(intent.kind).toBe('risk_of_holding');
+    expect(intent.unsupported).toEqual([]);
+    expect(templateResearchNote(intent,data).paragraphs.join(' ')).not.toContain('outside that universe');
+  });
+  it.each(['Explain $DOGE alongside rNVDA','Compare rDOGE and rNVDA','DOGE'])('still rejects explicit unsupported instruments in %s',question=>{
+    expect(parseIntent(question,data).unsupported.length).toBeGreaterThan(0);
+  });
   const cases:Array<[string,IntentKind]>=[['Talk me out of buying rNVDA','single_name'],['Compare rAMD and rNVDA','compare'],['What is moving tonight?','scan_board'],['Worst case holding rTSLA through the bell','risk_of_holding'],['Should I trust the model for rTSLA?','trust_the_model']];
   it.each(cases)('%s answers %s with only resolvable figures',(question,kind)=>{
     const intent=parseIntent(question,data);expect(intent.kind).toBe(kind);

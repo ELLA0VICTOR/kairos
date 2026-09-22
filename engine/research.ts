@@ -21,7 +21,12 @@ export function parseIntent(question:string,engine:EngineSnapshot):ParsedIntent 
   const symbols=engine.universe.filter(i=>!['rSPY','rQQQ'].includes(i.symbol)&&new RegExp(`\\b(?:${i.symbol}|${i.underlying})\\b`,'i').test(question)).map(i=>i.symbol);
   const known=new Set(engine.universe.flatMap(i=>[i.symbol.toUpperCase(),i.underlying]));
   const ignore=new Set(['I','AI','US','USD','USDT','ETF','ET','UTC','KAIROS','THE','IS','A','AND','OR','IF','MY','BUY','SELL','HOLD','WHY','WHAT','HOW','COMPARE','RISK','TRUST']);
-  const tokens=question.match(/\$[A-Za-z][A-Za-z0-9.]*|\br[A-Z][A-Za-z0-9.]*\b|\b[A-Z]{2,6}\b/g)??[];
+  // Capitalized prose is not a ticker declaration (e.g. STOCK MARKET OPENS).
+  // Known symbols are matched case-insensitively above. Reject explicit unknown
+  // cashtags/rTokens, or a standalone ticker, without rejecting ordinary speech.
+  const tokens:string[]=question.match(/\$[A-Za-z][A-Za-z0-9.]*|\br[A-Z][A-Za-z0-9.]*\b/g)??[];
+  const standalone=question.trim().match(/^([A-Z]{2,6})[?!.,]?$/)?.[1];
+  if(standalone)tokens.push(standalone);
   const unsupported=[...new Set(tokens.map(s=>s.replace(/^\$/,'')).filter(s=>!known.has(s.toUpperCase())&&!ignore.has(s)))];
   const kind:IntentKind=/trust.*(model|kairos|forecast|estimate)|accurac|track record|calibrat|reliable/i.test(question)?'trust_the_model':/hold|holding|worst|downside|risk/i.test(question)?'risk_of_holding':symbols.length>1||/compar|versus|\bvs\b/i.test(question)?'compare':symbols.length===1?'single_name':'scan_board';
   return {kind,symbols,unsupported,portfolioShared:/\b(my portfolio|my account|i own|i hold|i have|holdings)\b/i.test(question)};
