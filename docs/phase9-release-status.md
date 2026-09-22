@@ -1,5 +1,15 @@
 # Phase 9 release status
 
+## Latest pre-recording check, 22 September 2026
+
+Production now returns live Bitget quotes for all 20 instruments. The deployed real bundle has official-close anchor 2026-09-21 and passed the same coherence guard used by the app. The current extended session correctly produces no opening-gap forecasts. This supersedes the older cached/synthetic API observation below.
+
+Production Ask completed a streamed fallback response in 2.565 seconds over 74 chunks, with validated figure references. The language budget is paused; this run used zero model tokens. This is HTTP/output validation, not a browser DOM check.
+
+The latest deployed Lighthouse results are **Markets: 62 performance / 100 accessibility**, **Instrument: 58 performance / 100 accessibility**. Performance still fails the required 90. All **116 tests in 23 files** and the production build pass for the new transparent status notices and conversational Ask interface. These UI changes remain local until the owner pushes and redeploys.
+
+Keyboard navigation, the full viewport matrix, provider-transition DOM behavior and browser console checks remain unverified. Automatic approval review previously rejected the browser-automation launch; that restriction was not bypassed. No complete Phase 9 sign-off is claimed.
+
 The site is deployed at https://kairos-x-nu.vercel.app/. All five routes returned HTTP 200 on 22 September 2026. This does not mean every release criterion passes.
 
 ## Deployed checks, 22 September 2026
@@ -26,7 +36,7 @@ The deployed quotes API returned HTTP 200 with `source=cache`, `dataSource=synth
 
 ## Outstanding acceptance
 
-- Deploy the latest committed code, set `VITE_DATA_SOURCE=auto`, clear `VITE_DATA_BASE`, and redeploy. The current production deployment still reports synthetic quotes. No authenticated Vercel session was available to the assistant; the owner retains push/redeployment.
+- Push and redeploy the latest UI changes. Production now serves live quotes with a coherent real bundle; the owner retains push/redeployment.
 - Reach performance 90 on both deployed routes and measure again after deployment.
 - Complete actual keyboard navigation and the 390/768/1280/1920 route matrix. Browser automation launch was previously denied by automatic approval review; no usable existing CDP session was available. Code inspection does not substitute for this pass.
 - Confirm production banner transitions during a real provider failure and recovery; local source selection is implemented but production DOM behavior was not verified.

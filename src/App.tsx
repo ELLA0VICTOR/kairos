@@ -12,7 +12,7 @@ const Instrument=lazy(()=>import('@/routes/Instrument'));
 const Record=lazy(()=>import('@/routes/Record'));
 const Ask=lazy(()=>import('@/routes/Ask'));
 const client=new QueryClient({defaultOptions:{queries:{refetchOnWindowFocus:false}}});
-function DataModeNotice(){const {data}=useDesk();return data.source==='live'?null:<p className="notice" role="status" data-demo-banner>Demo mode — synthetic market data.</p>;}
+function DataModeNotice(){const {data,loading}=useDesk();return <p className="data-status" role="status" data-demo-banner={data.source==='live'?undefined:true}><span className="status-dot"/>{data.source==='live'?'Live Bitget data':loading?'Synthetic snapshot · Connecting':'Synthetic data'}<span className="data-status-detail">{data.source==='live'?'Experimental estimates':'Demo mode'}</span></p>;}
 function Footer(){const open=useMethod(),{generatedAt,data}=useDesk();return <footer className="footer"><span>kairos.</span><div><span>{data.source==='live'?'Bitget quotes · Real daily history · Cold-start forecast':'Simulated market data'} · Snapshot {time(generatedAt,'UTC','dd MMM HH:mm')} UTC</span>{replayTs!==undefined&&<span>Replay {time(replayTs,'UTC','dd MMM HH:mm')} UTC</span>}</div><button onClick={open}>Method & limitations ↗</button></footer>;}
 function Shell(){
   const location=useLocation(),reduced=useReducedMotion(),seen=useRef(false);

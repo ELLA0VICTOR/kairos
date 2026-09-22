@@ -1,0 +1,11 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import type {RealMarket} from '../engine/artifacts.js';
+import {realMarketBoard} from '../engine/real-market.js';
+import {adaptQuotes} from '../src/data/providers/bitget-adapters.js';
+const base=process.env.KAIROS_CHECK_URL??'https://kairos-x-nu.vercel.app';
+const request=async(path:string)=>{const r=await fetch(base+path,{signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(path+': HTTP '+r.status);return r.json() as Promise<unknown>;};
+const [bundle,feed]=await Promise.all([request('/data/real-market.json') as Promise<RealMarket>,request('/api/quotes?raw=1') as Promise<{available:boolean;raw:unknown}>]);
+if(!feed.available)throw new Error('Bitget quotes unavailable');
+const quotes=adaptQuotes(feed.raw,bundle.data.universe.map(i=>i.symbol)),board=realMarketBoard(bundle,quotes.quotes,Date.now());
+const report={checkedAt:new Date().toISOString(),url:base,source:'live',anchorDate:bundle.anchorDate,quotes:board.rows.length,session:board.session.state,isDark:board.session.isDark,forecasts:board.rows.filter(r=>r.forecast).length,passed:'Deployed real bundle and fresh Bitget quotes form a coherent engine input',limitation:'HTTP and engine verification, not browser DOM or calibrated real reversion'};
+await mkdir('artifacts',{recursive:true});await writeFile('artifacts/live-demo-check.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
