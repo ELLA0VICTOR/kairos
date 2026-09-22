@@ -1,7 +1,14 @@
 import { afterEach,it,expect,vi } from 'vitest';
 import { getLlmClient,OpenAiClient,estimatePromptTokens } from '../api/_llm';
-import { reserveLanguageBudget,reconcileLanguageBudget } from '../api/_guards';
+import { reserveLanguageBudget,reconcileLanguageBudget,languageBudgetLimit,languageBudgetStatus } from '../api/_guards';
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
+it('uses the default for blank settings but preserves an explicit spending pause',()=>{
+  vi.stubEnv('QWEN_DAILY_TOKEN_BUDGET','  ');expect(languageBudgetLimit()).toBe(30000);
+  vi.stubEnv('QWEN_DAILY_TOKEN_BUDGET','0');expect(languageBudgetLimit()).toBe(0);
+  expect(languageBudgetStatus(1200).reason).toBe('disabled');
+  vi.stubEnv('QWEN_DAILY_TOKEN_BUDGET','broken');expect(languageBudgetStatus(1200).reason).toBe('invalid_configuration');
+  vi.stubEnv('QWEN_DAILY_TOKEN_BUDGET','1000');expect(languageBudgetStatus(1200).reason).toBe('request_too_large');
+});
 it('charges actual usage above an estimate and rejects invalid reservations',()=>{
   const now=2200000000000;
   expect(reserveLanguageBudget(100,now,1000)).toBe(true);

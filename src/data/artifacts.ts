@@ -22,6 +22,12 @@ export function validateArtifact(value:unknown,name:string):Artifact<unknown>{
   return a;
 }
 export async function loadArtifacts(includeLedgers=true):Promise<LoadedArtifacts>{
+  // Paint the bundled snapshot and its fonts before competing for bandwidth
+  // with the much larger history downloads. Hidden tabs must not await rAF.
+  if(typeof document!=='undefined'&&document.visibilityState==='visible'){
+    await document.fonts.ready;
+    await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+  }
   const requestedNames=includeLedgers?names:names.filter(name=>!name.startsWith('ledger-'));
   const results=await Promise.allSettled(requestedNames.map(async name=>{
     // Data modes are not URL prefixes. Tolerate the common deployment mix-up.

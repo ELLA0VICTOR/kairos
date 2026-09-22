@@ -8,7 +8,7 @@ import { Boundary } from '@/components/primitives';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { time } from '@/lib/format';
 import Window from '@/routes/Window';
-const Instrument=lazy(()=>import('@/routes/Instrument'));
+import Instrument from '@/routes/Instrument';
 const Record=lazy(()=>import('@/routes/Record'));
 const Ask=lazy(()=>import('@/routes/Ask'));
 const client=new QueryClient({defaultOptions:{queries:{refetchOnWindowFocus:false}}});
@@ -22,13 +22,13 @@ function Shell(){
   useEffect(()=>{if(location.pathname==='/'&&!seen.current){seen.current=true;setIntro(!reduced);}},[location.pathname,reduced]);
   useEffect(()=>{if(!intro)return;const timer=setTimeout(()=>setIntro(false),1100);return()=>clearTimeout(timer);},[intro]);
   useEffect(()=>{const symbol=location.pathname.match(/^\/instrument\/([^/]+)/)?.[1];if(symbol)setLastSymbol(symbol);},[location.pathname]);
-  return <><Masthead lastSymbol={lastSymbol}/><main id="main" tabIndex={-1} className="page"><Boundary key={location.pathname.split('/')[1]??'window'} name={location.pathname}><Suspense fallback={<p role="status">Loading view�</p>}><Routes>
+  return <><Masthead lastSymbol={lastSymbol}/><main id="main" tabIndex={-1} className={`page${location.pathname==='/ask'?' ask-page':''}`}><Boundary key={location.pathname.split('/')[1]??'window'} name={location.pathname}><Suspense fallback={<p role="status">Loading view�</p>}><Routes>
     <Route path="/" element={<><DataModeNotice/><Window intro={intro}/></>}/>
     <Route path="/instrument/:symbol" element={<><DataModeNotice/><Instrument/></>}/>
     <Route path="/record" element={<><DataModeNotice/><Record/></>}/>
     <Route path="/method" element={<><DataModeNotice/><Window intro={false}/><OpenMethodRoute/></>}/>
     <Route path="/ask" element={<><DataModeNotice/><Ask/></>}/>
     <Route path="*" element={<div className="empty"><h1>Outside the window.</h1><Link to="/">Return to markets ↗</Link></div>}/>
-  </Routes></Suspense></Boundary></main><Footer/></>;
+  </Routes></Suspense></Boundary></main>{location.pathname!=='/ask'&&<Footer/>}</>;
 }
 export default function App(){return <QueryClientProvider client={client}><BrowserRouter><DataProvider><MethodProvider><Shell/></MethodProvider></DataProvider></BrowserRouter></QueryClientProvider>;}

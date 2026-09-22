@@ -1,7 +1,7 @@
 import { useEffect,useRef,useState } from 'react';
 import { useReducedMotion } from './useReducedMotion';
 export function useAnimatedNumber(value:number,{duration=280,initial=false,delay=0}:{duration?:number;initial?:boolean;delay?:number}={}){
-  const reduced=useReducedMotion(),[display,set]=useState(initial&&!reduced?0:value),[flash,setFlash]=useState(false),previous=useRef(display),mounted=useRef(false);
+  const reduced=useReducedMotion(),[display,set]=useState(value),[flash,setFlash]=useState(false),previous=useRef(display),mounted=useRef(false);
   useEffect(()=>{const changed=mounted.current&&previous.current!==value;mounted.current=true;
     if(reduced||previous.current===value){previous.current=value;set(value);return;}
     let frame=0,timer=0;const from=previous.current,start=performance.now()+(initial&&!changed?delay:0);

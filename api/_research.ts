@@ -70,7 +70,7 @@ export async function* research(question:string,data:EngineSnapshot,options:Rese
         messages.push({role:'assistant',content:text},{role:'user',content:`The response failed validation: ${reason}. Return complete valid JSON using only retrieved engine figures; fetch missing evidence if tools remain. Do not use markdown fences.`});
       }
     }
-  }catch(error) {notice=error instanceof LanguageBudgetPaused?'Language service paused for today. Figures are unaffected.':expired?'Research stopped at 45 seconds. Here is what was found.':'The language service is unavailable. Showing the engine-backed template.';}
+  }catch(error) {notice=error instanceof LanguageBudgetPaused?error.message:expired?'Research stopped at 45 seconds. Here is what was found.':'The language service is unavailable. Showing the engine-backed template.';}
   finally{clearTimeout(timeout);options.signal?.removeEventListener('abort',cancel);}
   if(options.signal?.aborted)return;
   if(expired)notice='Research stopped at 45 seconds. Here is what was found.';

@@ -5,7 +5,16 @@ export function rateAllowed(ip:string,now=Date.now()):boolean {
   const value=requests.get(ip)??{start:now,count:0};value.count++;requests.set(ip,value);return value.count<=20;
 }
 /** Reserve estimated input plus maximum output; this is a per-process soft cap. */
-export function reserveLanguageBudget(tokens:number,now=Date.now(),limit=Number(process.env.QWEN_DAILY_TOKEN_BUDGET??30000)):boolean {
+export function languageBudgetLimit():number {
+  const configured=process.env.QWEN_DAILY_TOKEN_BUDGET?.trim();
+  return configured?Number(configured):30000;
+}
+export function languageBudgetStatus(tokens:number,now=Date.now()) {
+  const limit=languageBudgetLimit(),used=day===new Date(now).toISOString().slice(0,10)?reserved:0;
+  const reason=!Number.isFinite(limit)||limit<0?'invalid_configuration':limit===0?'disabled':tokens>limit?'request_too_large':'daily_allowance';
+  return {reason,limit,used,requested:tokens};
+}
+export function reserveLanguageBudget(tokens:number,now=Date.now(),limit=languageBudgetLimit()):boolean {
   const today=new Date(now).toISOString().slice(0,10);if(today!==day){day=today;reserved=0;}
   if(!Number.isFinite(tokens)||tokens<0||!Number.isFinite(limit)||limit<0||reserved+tokens>limit)return false;reserved+=tokens;return true;
 }

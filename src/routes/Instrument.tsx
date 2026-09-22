@@ -1,3 +1,4 @@
+import {SessionNotice} from '@/components/chrome/SessionNotice';
 import { useEffect, useState } from 'react';
 import { CompanyMark } from '@/components/domain/CompanyMark';
 import { SessionBar } from '@/components/chrome/SessionBar';
@@ -31,7 +32,7 @@ export default function Instrument() {
     } };
     return <article className="instrument-view"><header className="page-heading"><div><Link className="eyebrow back-link" to="/">Overview <span>/</span> Instrument</Link><h1 className="instrument-title"><CompanyMark symbol={symbol}/>{symbol}</h1><span className="company-name">{row.instrument.name}</span><p>{sectorName(row.instrument.sector)} · anchored to {row.instrument.anchorFactor}</p><span className="muted">Beta {p.beta.toFixed(2)} (±{p.betaStdErr.toFixed(2)}) · {p.nObs} observations</span></div><div className="instrument-actions"><Field label="Instrument"><select aria-label="Instrument" value={symbol} onChange={e => navigate(`/instrument/${e.target.value}`)}>{data.universe.map(i => <option key={i.symbol}>{i.symbol}</option>)}</select></Field><Button variant="primary" disabled={!f || loading} onClick={() => void log()}>Log a fix</Button></div></header><SessionBar compact/>
  {confirmation && <p role="status" className="notice">{confirmation}</p>}{error && <Notice retry={retry}>{error} Showing the last available snapshot.</Notice>}{fallbacks.length > 0 && <p className="offline-note">Offline snapshot in use.</p>}
- {!board.session.isDark && <Notice>Reckoning is paused during real price discovery. No dark-window forecast is issued.</Notice>}
+ <SessionNotice/>
  <div className="instrument-grid">
  <Panel title={!board.session.isDark ? 'Tracking the current quote' : r.drift >= 0 ? 'Trading above reckoning' : 'Trading below reckoning'}><div className={`hero-drift ${Math.abs(r.drift) < .003 ? 'tone-dim' : r.drift > 0 ? 'tone-rust' : 'tone-verdigris'}`}>{pct(r.drift)}</div><dl className="facts"><div><dt>Traded</dt><dd>{price(r.tokenPrice)} USDT</dd></div><div><dt>Fair value</dt><dd>{price(r.reckonedValue)} USDT</dd></div><div><dt>80% band</dt><dd>{price(r.bandLow)}–{price(r.bandHigh)}</dd></div></dl><Tag tone={r.trustLabel === 'thin' ? 'amber' : r.trustLabel === 'deep' ? 'verdigris' : 'dim'}>{r.trustLabel} book</Tag><p className="trust-reasons">{row.liquidity.reasons.join('. ') + '.'}</p></Panel>
  <Panel title="Behind the move"><Boundary name="Attribution"><Waterfall value={r.components}/></Boundary><p className="panel-prose">{attributionSentence(r.components, r.trust)}</p><p className="micro-note">Components add in log-return space, from the official close. Percentages are rounded.</p></Panel>

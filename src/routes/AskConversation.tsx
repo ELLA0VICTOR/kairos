@@ -18,7 +18,7 @@ export default function AskConversation(){
   const controller=new AbortController(),id=++counter.current;active.current=controller;
   const scoped=contextualQuestion(value.trim(),context,data.universe);setContext(scoped.symbols);
   setTurns(all=>[...all,{id,question:value.trim(),steps:[],prose:'',status:'working'}]);setQuestion('');
-  requestAnimationFrame(()=>latest.current?.scrollIntoView({block:'start',behavior:'instant'}));
+  requestAnimationFrame(()=>latest.current?.parentElement?.parentElement?.scrollTo({top:latest.current.offsetTop,behavior:'instant'}));
   let done=false;
   const consume=async(events:AsyncIterable<ResearchEvent>)=>{for await(const event of events){
    if(controller.signal.aborted)return;
@@ -41,8 +41,9 @@ export default function AskConversation(){
  function clear(){active.current?.abort();active.current=null;lock.current=false;setBusy(false);setTurns([]);setContext([]);setQuestion('');input.current?.focus();}
  return <div className="ask-agent">
   <header className="agent-header"><div><span className="eyebrow">Kairos / Research</span><h1>A clearer read.</h1><p>Ask about the move. Follow the evidence.</p></div><button className="button quiet" onClick={clear} disabled={!turns.length}>New conversation</button></header>
+  <div className="agent-scroll" role="region" tabIndex={0} aria-label="Research messages">
   {!turns.length&&<section className="agent-welcome" aria-label="Start a research conversation"><div className="agent-emblem"><BrandMark/></div><h2>What are you watching?</h2><p>A name, a dislocation, or a reason to wait.</p><div className="agent-examples">{examples.filter(([,q])=>!data.universe.some(i=>q!.includes(i.symbol)&&data.params.instruments[i.symbol]?.estimateStability==='unstable')).map(([label,q])=><button key={label} onClick={()=>void submit(q)}><span>{label}</span><Icon name="arrow"/><small>{q}</small></button>)}</div></section>}
-  <div className="agent-thread" aria-label="Research conversation">
+  <div className="agent-thread">
    {turns.map((turn,index)=><section className="agent-turn" key={turn.id} ref={index===turns.length-1?latest:null}>
     <div className="agent-question"><span>You</span><p>{turn.question}</p></div>
     <article className="agent-answer" data-research-note aria-busy={turn.status==='working'}>
@@ -55,6 +56,7 @@ export default function AskConversation(){
      {turn.result&&<><details className="agent-conclusion" open><summary>What to watch next</summary><dl data-recommendation><div><dt>Invalidation</dt><dd data-generated-prose><ResearchProse text={turn.result.note.recommendation.invalidatedIf} figures={turn.result.figures}/></dd></div><div><dt>Watch for</dt><dd data-generated-prose><ResearchProse text={turn.result.note.recommendation.watchFor} figures={turn.result.figures}/></dd></div><div><dt>Next bell</dt><dd><ResearchProse text="{{fig:nextOpen}}" figures={turn.result.figures}/></dd></div><div><dt>Position ceiling</dt><dd><ResearchProse text="{{fig:sizeCeiling}}" figures={turn.result.figures}/> of account. No allocation is justified.</dd></div></dl></details><p className="agent-provenance" data-generated-prose>Confidence: {turn.result.note.confidence}. <ResearchProse text={turn.result.note.confidenceReason} figures={turn.result.figures}/></p><p className="agent-provenance">Snapshot {new Date(turn.result.asOf).toUTCString()} · <Link to="/record">View the record</Link></p></>}
     </article>
    </section>)}
+  </div>
   </div>
   <div className="agent-composer-wrap"><form className="agent-composer" onSubmit={e=>{e.preventDefault();void submit();}}>
    <label htmlFor="agent-question" className="sr-only">Your research question</label>

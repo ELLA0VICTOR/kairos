@@ -1,5 +1,18 @@
 # Phase 9 release status
 
+## Demo-readiness update, 22 September 2026
+
+The final local compressed production preview scored **Markets 91 performance / 100 accessibility** and **Instrument 95 / 100** with Lighthouse mobile defaults. Markets LCP was 2.9 seconds, blocking time 210 ms; Instrument LCP 2.2 seconds, blocking time 190 ms. Both had layout shift approximately 0.001. These are **local synthetic-mode build results, not a new Vercel audit**. The Instrument report was saved successfully before Windows temporary-profile cleanup returned EPERM.
+
+The user confirmed the production budget variable was empty. JavaScript converted that empty string to zero. Empty/unset now uses the unchanged 30,000-token default; explicit zero still disables calls. Reason-specific notices distinguish a disabled setting, malformed setting, oversized request and depleted allowance. No key or prompt is logged.
+
+A real local OpenAI request streamed a validated response in 19.210 seconds (8,227 input + 844 output tokens, including 5,504 cached input tokens). A local Qwen request authenticated and executed six engine tools, but its final write-up reached the 45-second research deadline. The streamed fallback completed in 48.237 seconds including artifact loading and delivery; reported completed-call usage was 1,837 tokens. Any unreported usage from the interrupted call is not included. Qwen's full successful write-up is therefore not claimed.
+
+Ask now occupies the available viewport, with a fixed composer and internal message scrolling. The welcome screen was inspected in Lighthouse's desktop and mobile screenshots; both show the examples and composer within the viewport. The audits scored 96 accessibility and identified an invalid label on a generic conversation div; that label was removed in the final build. All 117 tests in 23 files, the production build and the plain-Node API smoke check pass. The navigation wordmark dot was removed. The local .env remains ignored by Git.
+
+The owner still needs to push/redeploy and add the Qwen secret to Vercel separately if enabling it there. Local .env is not uploaded. After deployment, production Lighthouse and live Ask need confirmation. Prior keyboard/viewport/DOM limitations below remain; a Lighthouse screenshot is not an interactive keyboard test.
+
+
 ## Latest pre-recording check, 22 September 2026
 
 Production now returns live Bitget quotes for all 20 instruments. The deployed real bundle has official-close anchor 2026-09-21 and passed the same coherence guard used by the app. The current extended session correctly produces no opening-gap forecasts. This supersedes the older cached/synthetic API observation below.

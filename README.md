@@ -87,7 +87,7 @@ In **Vercel → project → Settings → Environment Variables**, create `OPENAI
 | `VITE_DATA_BASE` | Leave unset | Public. Uses same-origin `/data/`. |
 | `OPENAI_API_KEY` | Your key, entered in Vercel | **Secret.** Temporary provider while Qwen approval is pending. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Server-only model selection. |
-| `QWEN_API_KEY` | Leave unset until approved | **Secret.** Takes priority over OpenAI when present. |
+| `QWEN_API_KEY` | Your issued Qwen key | **Secret.** Takes priority over OpenAI when present. |
 | `QWEN_BASE_URL` | `https://hackathon.bitgetops.com/v1` | Server-only; this is also the code default. |
 | `QWEN_MODEL` | `qwen3.8-max` | Server-only; this is also the code default. |
 | `QWEN_DAILY_TOKEN_BUDGET` | `30000` | Token guard shared by both providers despite its historical name. `0` pauses language calls. |
@@ -95,7 +95,7 @@ In **Vercel → project → Settings → Environment Variables**, create `OPENAI
 
 Selection is **Qwen → OpenAI → deterministic templates**, based on configured keys. Failure of the selected provider returns templates instead of silently charging another provider. Research is capped at six tool calls, forty-five seconds and twenty requests per IP per hour. Rate and token counters are in-memory per warm function instance, **not a durable account-wide spending limit**. Set spending controls in the provider account before sharing a public demo.
 
-The token guard reserves estimated prompt tokens plus the maximum response, then replaces the estimate with provider-reported usage (including overages). Calls without a usage report retain their reservation. Estimation can differ from tokenization; this is a soft application limit. A budget-paused message refers to this guard, not the provider account's credit balance.
+The token guard reserves estimated prompt tokens plus the maximum response, then replaces the estimate with provider-reported usage (including overages). Calls without a usage report retain their reservation. Estimation can differ from tokenization; this is a soft application limit. A budget-paused message refers to this guard, not the provider account's credit balance. An empty or unset `QWEN_DAILY_TOKEN_BUDGET` uses 30,000; an explicit `0` disables calls. This setting applies to both Qwen and OpenAI.
 
 Official guidance: [Vercel environment variables](https://vercel.com/docs/environment-variables) and [sensitive values](https://vercel.com/docs/environment-variables/sensitive-environment-variables).
 

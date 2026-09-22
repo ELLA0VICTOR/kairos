@@ -74,10 +74,11 @@ export function getSessionInfo(ts: number): SessionInfo {
     windowProgress: clamp((ts - anchorCloseTs) / windowDurationMs) };
 }
 /** Would-be weekday sessions carry the same weight on full-day holidays. */
+const weightClock=new Intl.DateTimeFormat('en-US',{timeZone:NYSE_TZ,weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 export function sessionWeight(ts: number): number {
-  const key = nyDate(ts), weekday = new Date(`${key}T12:00:00Z`).getUTCDay();
-  if (weekday === 0 || weekday === 6) return 0.12;
-  const hours = Number(formatInTimeZone(ts, NYSE_TZ, 'H')) + Number(formatInTimeZone(ts, NYSE_TZ, 'm')) / 60;
+  const parts=weightClock.formatToParts(ts),part=(type:string)=>parts.find(p=>p.type===type)!.value;
+  if (part('weekday') === 'Sun' || part('weekday') === 'Sat') return 0.12;
+  const hours = Number(part('hour')) + Number(part('minute')) / 60;
   if (hours >= 9.5 && hours < 16) return 1;
   return hours >= 4 && hours < 20 ? 0.45 : 0.25;
 }

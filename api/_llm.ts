@@ -1,4 +1,4 @@
-import { reserveLanguageBudget,reconcileLanguageBudget } from './_guards.js';
+import { reserveLanguageBudget,reconcileLanguageBudget,languageBudgetStatus } from './_guards.js';
 export interface ToolSpec { name:string; description:string; parameters:Record<string,unknown> }
 export interface ToolCall { id:string; name:string; arguments:string }
 export interface Message { role:'user'|'assistant'|'tool'; content:string|null; tool_call_id?:string; tool_calls?:Array<{id:string;type:'function';function:{name:string;arguments:string}}> }
@@ -53,7 +53,12 @@ export function getLlmClient():LlmClient {
   if(client.id==='none')return client;
   return {id:client.id,async *complete(args){
     const reservation=estimatePromptTokens(args)+args.maxTokens,reservedAt=Date.now();
-    if(!reserveLanguageBudget(reservation,reservedAt))throw new LanguageBudgetPaused('Language service paused for today. Figures are unaffected.');
+    if(!reserveLanguageBudget(reservation,reservedAt)){
+      const status=languageBudgetStatus(reservation,reservedAt);
+      console.warn('Language budget blocked',status);
+      const message=status.reason==='disabled'?'Language calls are disabled by the server budget setting.':status.reason==='invalid_configuration'?'The server language budget setting is invalid.':status.reason==='request_too_large'?'This research request exceeds the server language budget.':'Language service paused for today.';
+      throw new LanguageBudgetPaused(message+' Figures are unaffected.');
+    }
     let actual:number|undefined;
     try {for await(const chunk of client.complete(args)){if(chunk.type==='usage')actual=chunk.tokens;yield chunk;}}
     finally{if(actual!==undefined)reconcileLanguageBudget(reservation,actual,reservedAt);}
