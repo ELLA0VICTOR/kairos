@@ -1,6 +1,7 @@
 import type { DailyBar, Instrument, InstrumentParams, SectorKey } from './types.js';
 import type { LiquidityAssessment } from './liquidity.js';
 import { clamp, median, ols, stdev } from './stats.js';
+import {validateBeta} from './stability.js';
 export type TrustLabel = LiquidityAssessment['label'];
 export interface ReversionObservation {symbol:string;sector:SectorKey;label:TrustLabel;drift:number;realisedGap:number;ts:number}
 export interface ReversionFit {kappa:number;kappaStdErr:number;sigmaForecast:number;nObs:number;pooled:boolean}
@@ -51,7 +52,8 @@ export function estimateParameters(universe:Instrument[],history:Record<string,D
     const u=paired.map(p=>p.y-gamma*p.x);
     const bucket={thin:estimateReversion(observations,i.symbol,i.sector,'thin'),moderate:estimateReversion(observations,i.symbol,i.sector,'moderate'),deep:estimateReversion(observations,i.symbol,i.sector,'deep')};
     buckets[i.symbol]=bucket;
-    instruments[i.symbol]={symbol:i.symbol,beta:fit.slope,betaStdErr:fit.slopeStdErr,gamma,rSquared:fit.rSquared,sigmaIdio:Math.max(.0015,stdev(u)),kappa:bucket.moderate.kappa,kappaStdErr:bucket.moderate.kappaStdErr,sigmaForecast:bucket.moderate.sigmaForecast,nObs:dates.length,estimatedAt};
+    const stability=validateBeta(dates.map(d=>gaps.get(i.anchorFactor)!.get(d)!),dates.map(d=>gaps.get(i.symbol)!.get(d)!),i.symbol===i.anchorFactor);
+    instruments[i.symbol]={symbol:i.symbol,estimateStability:stability.estimateStability,beta:fit.slope,betaStdErr:fit.slopeStdErr,gamma,rSquared:fit.rSquared,sigmaIdio:Math.max(.0015,stdev(u)),kappa:bucket.moderate.kappa,kappaStdErr:bucket.moderate.kappaStdErr,sigmaForecast:bucket.moderate.sigmaForecast,nObs:dates.length,estimatedAt};
   }
   return {instruments,buckets};
 }

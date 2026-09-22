@@ -1,11 +1,11 @@
 import { computeBoard } from '@engine/board';
 import { getSessionInfo } from '@engine/calendar';
-import type { ArtifactSet } from '@engine/artifacts';
+import {unpackAnalogs,type ArtifactSet} from '@engine/artifacts';
 import { getProvider } from './providers';
 let data:ArtifactSet|undefined;
 self.onmessage=async(event:MessageEvent<{id:number;data?:ArtifactSet;ts?:number}>)=>{
  const {id,ts}=event.data;
- if(event.data.data)data=event.data.data;
+ if(event.data.data){data=event.data.data;if(data.compactAnalogs){data.analogs=unpackAnalogs(data.compactAnalogs);delete data.compactAnalogs;}}
  try{
   if(!data)throw new Error('Worker has no artifact set');
   const p=getProvider(ts),universe=data.universe,quotes=await p.getQuotes(universe.map(i=>i.symbol)),session=getSessionInfo(quotes.asOf);

@@ -14,7 +14,9 @@ export interface SnapshotRow {instrument:Instrument;quote:Quote;reckoning:Reckon
 export interface Snapshot {ts:number;session:SessionInfo;rows:SnapshotRow[];news:NewsItem[]}
 export interface HistoricalWindow {anchorCloseTs:number;targetOpenTs:number;type:AnalogFeatures['windowType']}
 export interface RawHistory {universe:Instrument[];bars:Record<string,DailyBar[]>;windows:HistoricalWindow[]}
-export interface ArtifactSet {universe:Instrument[];params:ParamsArtifact;analogs:AnalogRecord[];snapshot:Snapshot;ledgerLive:Fix[];ledgerBacktest:Fix[]}
+export interface ArtifactSet {source?:'live'|'synthetic';compactAnalogs?:CompactAnalogs;universe:Instrument[];params:ParamsArtifact;analogs:AnalogRecord[];snapshot:Snapshot;ledgerLive:Fix[];ledgerBacktest:Fix[]}
+/** A coherent real-data bundle. Never combine these anchors/params with synthetic paths. */
+export interface RealMarket {anchorDate:string;anchors:Record<string,number>;historyAsOf:number;data:ArtifactSet}
 /** Compact records use dictionary indices and fixed-point numeric features. */
 export interface CompactAnalogs {
   columns:readonly string[];symbols:Instrument[];windows:HistoricalWindow[];

@@ -2,7 +2,7 @@ import type { Attribution, Instrument, InstrumentParams, Quote, Reckoning, Sessi
 import type { LiquidityAssessment } from './liquidity.js';
 import { getSessionInfo } from './calendar.js';
 import { clamp, normInv } from './stats.js';
-import { cleanQuote, guardBand, hasAnchor, staleParams } from './quality.js';
+import { cleanQuote, guardBand, hasAnchor, bandMultiplier } from './quality.js';
 export interface ReckonInput {
   instrument:Instrument;params:InstrumentParams;anchorPrice:number;tokenPrice:number;
   marketFactorReturn:number;sectorFactorReturn:number;newsImpact:number;newsUncertainty:number;
@@ -29,7 +29,7 @@ export function reckon(input:ReckonInput):Reckoning {
   const fair=params.beta*input.marketFactorReturn+params.gamma*input.sectorFactorReturn+input.newsImpact;
   const reckonedValue=anchorPrice*Math.exp(fair);
   const variance=(params.betaStdErr*input.marketFactorReturn)**2+params.sigmaIdio**2*input.sessionEquivHours/input.standardWindowEquivHours+input.newsUncertainty**2+(.6*(1-liquidity.trust)*params.sigmaIdio)**2;
-  const sigma=clamp(Math.sqrt(variance),.0015,.15)*(staleParams(params,ts)?1.2:1);
+  const sigma=clamp(Math.sqrt(variance),.0015,.15)*bandMultiplier(params,ts);
   const z=normInv(.9),band=guardBand(reckonedValue*Math.exp(-z*sigma),reckonedValue*Math.exp(z*sigma),reckonedValue);
   return {...base,reckonedValue,bandLow:band.low,bandHigh:band.high,drift:Math.log(tokenPrice/reckonedValue)};
 }

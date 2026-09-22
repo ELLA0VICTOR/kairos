@@ -3,12 +3,23 @@ import { resolve } from 'node:path';
 import type { IncomingMessage,ServerResponse } from 'node:http';
 import type { Artifact,Snapshot } from '../engine/artifacts.js';
 import { SCHEMA_VERSION } from '../engine/artifacts.js';
+import {bitgetRequest} from './_bitget.js';
+import {adaptQuotes} from '../src/data/providers/bitget-adapters.js';
+import {SYMBOL_MAP} from '../src/data/providers/symbolMap.js';
 let cache:Artifact<Snapshot>|undefined,loadedAt=0;
-/** Phase 9 serves the committed snapshot honestly; live upstream integration belongs to Phase 10. */
+/** Public read-only Bitget quotes with a saved, explicitly labelled fallback. */
 export default async function quotes(req:IncomingMessage,res:ServerResponse):Promise<void>{
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','public, max-age=20, stale-while-revalidate=120');
   if(req.method!=='GET'){res.statusCode=405;res.setHeader('Allow','GET');res.end(JSON.stringify({message:'Use GET to read saved quotes.'}));return;}
+  const query=new URL(req.url??'/', 'http://localhost').searchParams;
+  const requested=query.get('symbols')?.split(',')??Object.keys(SYMBOL_MAP);
+  if(process.env.VITE_DATA_SOURCE!=='synthetic'){
+    try{const raw=await bitgetRequest({method:'quotes'}),live=adaptQuotes(raw,requested);
+      res.end(JSON.stringify(query.get('raw')==='1'?{available:true,raw}:{asOf:new Date(live.asOf).toISOString(),source:'bitget',dataSource:'live',quotes:live.quotes}));return;
+    }catch{/* Never pass an upstream failure through as a server error. */}
+  }
+  if(query.get('raw')==='1'){res.end(JSON.stringify({available:false,notice:'Live quotes unavailable'}));return;}
   try {
     if(!cache||Date.now()-loadedAt>20000){
       const value=JSON.parse(await readFile(resolve(process.cwd(),'public/data/snapshot.json'),'utf8')) as Artifact<Snapshot>;
@@ -16,6 +27,5 @@ export default async function quotes(req:IncomingMessage,res:ServerResponse):Pro
       cache=value;loadedAt=Date.now();
     }
   }catch{/* Retain the last known snapshot and its actual timestamp. */}
-  const requested=new URL(req.url??'/', 'http://localhost').searchParams.get('symbols')?.split(',');
   res.end(JSON.stringify({asOf:cache?new Date(cache.data.ts).toISOString():null,source:'cache',dataSource:cache?.source??'unavailable',quotes:(cache?.data.rows??[]).filter(r=>!requested||requested.includes(r.instrument.symbol)).map(r=>r.quote),notice:cache?'Saved snapshot quotes; this endpoint is not a live market feed.':'No saved quotes are available.'}));
 }

@@ -1,12 +1,13 @@
 import {browser,check,sleep} from './browser-kit.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';
 const b=await browser(),results=[];
+const base=process.env.KAIROS_CHECK_URL??'http://127.0.0.1:4173';
 const key=async(key,code=key,modifiers=0)=>{await b.call('Input.dispatchKeyEvent',{type:'keyDown',key,code,modifiers});await b.call('Input.dispatchKeyEvent',{type:'keyUp',key,code,modifiers});};
 try{
  await b.call('Log.enable');
  for(const width of [390,768,1280,1920])for(const route of ['/','/instrument/rNVDA','/record','/ask','/method']){
    await b.call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<640});
-   await b.call('Page.navigate',{url:'http://127.0.0.1:4173'+route});await sleep(2500);
+   await b.call('Page.navigate',{url:base+route});await sleep(2500);
    if(route==='/method')await b.evaluate(`document.querySelector('dialog details').open=true`);
    check(await b.evaluate(`document.documentElement.scrollWidth<=innerWidth&&!document.body.textContent.includes('could not render')`),`${route} fits ${width}px`);
    if(route==='/method'){
@@ -22,7 +23,8 @@ try{
    }
    await b.evaluate(`document.activeElement?.blur();document.querySelector('.skip').focus()`);
    const labels=[];
-   for(let i=0;i<25;i++){
+   const stopCount=await b.evaluate(`Array.from(document.querySelectorAll('a[href],button,input,select,textarea,summary,[tabindex]')).filter(e=>!e.disabled&&e.tabIndex>=0&&e.getClientRects().length&&!e.closest('dialog:not([open])')).length`);
+   for(let i=0;i<stopCount+1;i++){
      await key('Tab');
      const focus=await b.evaluate(`(()=>{const e=document.activeElement,s=getComputedStyle(e),wrapper=e.closest('.search-field');return {tag:e.tagName,label:e.getAttribute('aria-label')||e.textContent.trim().slice(0,60),visible:s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0||s.boxShadow!=='none'||!!wrapper&&getComputedStyle(wrapper).borderTopColor==='rgb(188, 245, 155)'};})()`);
      if(focus.tag==='BODY')break;

@@ -1,5 +1,5 @@
-import type { Attribution, NewsItem } from './types';
-import { mean } from './stats';
+import type { Attribution, NewsItem } from './types.js';
+import { mean } from './stats.js';
 export function aggregateNews(items:NewsItem[],symbol:string,anchorTs:number,now:number):{impact:number;uncertainty:number;drivers:Attribution['newsDrivers']} {
   const relevant=items.filter(n=>!n.preAnchor&&n.ts>=anchorTs&&n.ts<=now&&(!n.symbols.length||n.symbols.includes(symbol)));
   const known=relevant.filter(n=>n.impact!==null);

@@ -45,6 +45,7 @@ try {
 } finally {await new Promise(resolve=>server.close(resolve));}
 `);
 const env={...process.env};delete env.OPENAI_API_KEY;delete env.QWEN_API_KEY;
+env.VITE_DATA_SOURCE='synthetic';
 const result=spawnSync(process.execPath,[resolve(output,'check.mjs')],{cwd:root,env,stdio:'inherit',timeout:60000});
 if(result.error)throw result.error;
 process.exitCode=result.status??1;

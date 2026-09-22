@@ -31,7 +31,7 @@ export function runTool(call:ResearchCall,data:EngineSnapshot):unknown {
   if(call.name==='get_track_record'){
     const origin=a.origin??'both',trust=a.trust??'all';
     if(!['live','backtest','both'].includes(String(origin))||!['thin','moderate','deep','all'].includes(String(trust)))throw new Error('Invalid ledger filter');
-    return {live:origin!=='backtest'?recordStats(data,'live',String(trust)):null,backtest:origin!=='live'?recordStats(data,'backtest',String(trust)):null,notice:'Synthetic data. Ledgers are separate; no real-market validation.'};
+    return {live:origin!=='backtest'?recordStats(data,'live',String(trust)):null,backtest:origin!=='live'?recordStats(data,'backtest',String(trust)):null,notice:data.source==='live'?'No real-market resolved ledger is available yet.':'Synthetic data. Ledgers are separate; no real-market validation.'};
   }
   if(call.name==='get_news'){
     if(a.symbols!==undefined&&(!Array.isArray(a.symbols)||a.symbols.some(v=>typeof v!=='string'||!data.universe.some(i=>i.symbol===v))))throw new Error('Invalid news symbols');
@@ -41,7 +41,7 @@ export function runTool(call:ResearchCall,data:EngineSnapshot):unknown {
   const row=s.rows.find(r=>r.instrument.symbol===a.symbol);
   if(!row)throw new Error('Unknown or missing instrument');
   switch(call.name){
-    case 'get_reckoning':return {...row.reckoning,reasons:row.liquidity.reasons,stale:row.stale};
+    case 'get_reckoning':return {...row.reckoning,reasons:row.liquidity.reasons,estimateStability:data.params.instruments[row.instrument.symbol]?.estimateStability,stale:row.stale};
     case 'get_attribution':return {...row.reckoning.components,explained:explainedShare(row.reckoning.components)};
     case 'get_forecast':return {forecast:row.forecast,evidence:row.evidence};
     case 'get_analogs': {

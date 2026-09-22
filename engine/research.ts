@@ -26,7 +26,7 @@ export function parseIntent(question:string,engine:EngineSnapshot):ParsedIntent 
   const kind:IntentKind=/trust.*(model|kairos|forecast|estimate)|accurac|track record|calibrat|reliable/i.test(question)?'trust_the_model':/hold|holding|worst|downside|risk/i.test(question)?'risk_of_holding':symbols.length>1||/compar|versus|\bvs\b/i.test(question)?'compare':symbols.length===1?'single_name':'scan_board';
   return {kind,symbols,unsupported,portfolioShared:/\b(my portfolio|my account|i own|i hold|i have|holdings)\b/i.test(question)};
 }
-export function rankedRows(engine:EngineSnapshot):SnapshotRow[]{return engine.snapshot.rows.filter(r=>!['rSPY','rQQQ'].includes(r.instrument.symbol)&&!r.stale).sort((a,b)=>Math.abs(b.reckoning.drift)-Math.abs(a.reckoning.drift));}
+export function rankedRows(engine:EngineSnapshot):SnapshotRow[]{return engine.snapshot.rows.filter(r=>!['rSPY','rQQQ'].includes(r.instrument.symbol)&&!r.stale&&engine.params.instruments[r.instrument.symbol]?.estimateStability!=='unstable').sort((a,b)=>Math.abs(b.reckoning.drift)-Math.abs(a.reckoning.drift));}
 export function recordStats(engine:EngineSnapshot,origin:'live'|'backtest',bucket='all'){
   const rows=(origin==='live'?engine.ledgerLive:engine.ledgerBacktest).filter(f=>bucket==='all'||trustLabel(f.trust)===bucket);
   return computeStats(rows,Object.fromEntries(engine.universe.map(i=>[i.symbol,i.sector])));
@@ -67,7 +67,7 @@ export function templateResearchNote(intent:ParsedIntent,engine:EngineSnapshot):
   const condition=(r:SnapshotRow,prefix:string):string=>{
     const symbol=r.instrument.symbol,rc=r.reckoning,share=explainedShare(rc.components);
     const band=rc.tokenPrice>rc.bandHigh?'above':rc.tokenPrice<rc.bandLow?'below':'inside';
-    return `${symbol} trades ${band} its reckoning band, with drift ${fig(prefix+'Drift','drift',symbol)}. `+
+    return (engine.params.instruments[symbol]?.estimateStability==='unstable'?'The gap-beta estimate failed stability checks; its uncertainty bands are widened. ':'')+`${symbol} trades ${band} its reckoning band, with drift ${fig(prefix+'Drift','drift',symbol)}. `+
       (r.stale?'The quote is stale; this is a historical observation, not a current signal. ':!engine.snapshot.session.isDark?'External price discovery is active, so the dark-window forecast is paused. ':band==='inside'?'There is no clear dislocation beyond the current uncertainty band. ':`The token is ${band==='above'?'rich':'cheap'} relative to the model, but a dislocation is not proof of a reversal. `)+
       (rc.trustLabel==='thin'?'Thin liquidity weakens the information in this print. ':rc.trustLabel==='deep'?'Deeper liquidity gives the move more informational weight. ':'Liquidity is mixed; treat the print cautiously. ')+
       (share>=.6?'Observable market, sector and news factors explain most of the move. ':rc.trustLabel==='deep'?'Much of the move is unaccounted for despite meaningful liquidity. It may contain information the model cannot see. ':'Most of the move is unaccounted for; thin trading is a plausible explanation, not a proven cause. ')+
@@ -85,7 +85,7 @@ export function templateResearchNote(intent:ParsedIntent,engine:EngineSnapshot):
         if(other){paragraphs.push(condition(other,'second'));paragraphs.push(row.reckoning.trust>other.reckoning.trust?`${s} has the stronger liquidity support. That does not make it the better trade.`:row.reckoning.trust<other.reckoning.trust?`${other.instrument.symbol} has the stronger liquidity support. That does not make it the better trade.`:'Neither has a liquidity advantage in this snapshot. Compare the unexplained component rather than treating drift as an opportunity.');}
         else paragraphs.push('A comparable covered name is unavailable.');break;
       }
-      case 'scan_board':paragraphs.push(`${s} has the widest absolute drift among the usable covered quotes. This scan ranks dislocation, not expected profit.`,condition(row,'main'));break;
+      case 'scan_board':paragraphs.push(`${s} has the widest absolute drift among eligible, stable estimates. This scan ranks dislocation, not expected profit.`,condition(row,'main'));break;
       case 'risk_of_holding':paragraphs.push(condition(row,'main'),row.forecast?`The estimated opening gap spans ${fig('forecastLow','forecastLow',s)} to ${fig('forecastHigh','forecastHigh',s)}, with a midpoint of ${fig('forecastMedian','forecastMedian',s)}. This interval is not a worst-case loss limit; gaps can exceed it.`:'A gap interval is unavailable. The model cannot quantify the risk of carrying this through the next bell.');break;
       case 'trust_the_model': {
         const bucket=r.trustLabel,backtest=recordStats(engine,'backtest',bucket),live=recordStats(engine,'live',bucket);
@@ -101,7 +101,7 @@ export function templateResearchNote(intent:ParsedIntent,engine:EngineSnapshot):
   paragraphs.push('Order-book depth, positioning, options pricing and news outside the supplied feed remain unseen. No position allocation is justified by this research alone.');
   if(intent.portfolioShared)paragraphs.push('Holdings mentioned in the question are used for this response only and are not stored or sent to the language provider. No portfolio sizing is inferred.');
   fig('sizeCeiling','sizeCeiling');fig('nextOpen','nextOpen');
-  return {title,paragraphs:paragraphs.map(stripInlineDigits),figures,recommendation:{sizeCeilingPct:0,invalidatedIf:row&&!intent.unsupported.length?`${row.instrument.symbol} crosses its current reckoning band or its liquidity assessment changes; recompute the thesis.`:'Fresh covered quotes and a usable forecast become available.',watchFor:row?`A fresh ${row.instrument.underlying} headline confirmed by sustained trading volume.`:'The next usable market snapshot.',resolvesAt:engine.snapshot.session.nextOpenTs},confidence:'low',confidenceReason:'The data is simulated and the forecast has not been validated against real market history.'};
+  return {title,paragraphs:paragraphs.map(stripInlineDigits),figures,recommendation:{sizeCeilingPct:0,invalidatedIf:row&&!intent.unsupported.length?`${row.instrument.symbol} crosses its current reckoning band or its liquidity assessment changes; recompute the thesis.`:'Fresh covered quotes and a usable forecast become available.',watchFor:row?`A fresh ${row.instrument.underlying} headline confirmed by sustained trading volume.`:'The next usable market snapshot.',resolvesAt:engine.snapshot.session.nextOpenTs},confidence:'low',confidenceReason:engine.source==='live'?'Quotes and gap betas use real data. Reversion is a cold-start default, with no validated real-market forecast record.':'The data is simulated and the forecast has not been validated against real market history.'};
 }
 const object=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
 /** Validate structure and references, then enforce numeric provenance on every prose field. */

@@ -1,15 +1,15 @@
-import type { ArtifactSet, SnapshotRow } from './artifacts';
-import type { Candle, NewsItem, Quote, Reckoning, SessionInfo } from './types';
-import { getSessionInfo, HOUR, sessionEquivalentHours, STANDARD_WINDOW_EQUIV_HOURS } from './calendar';
-import { analogScales, findAnalogs, type AnalogFeatures, type AnalogResult } from './analogs';
-import { aggregateNews } from './news';
-import { assessLiquidity } from './liquidity';
-import { selectParams } from './params';
-import { reckon } from './reckon';
-import { median } from './stats';
-import { explainedShare } from './attribute';
-import { forecastEvidence, forecastGap } from './forecast';
-import { hasAnchor, isAbsurdDrift, isStaleQuote } from './quality';
+import type { ArtifactSet, SnapshotRow } from './artifacts.js';
+import type { Candle, NewsItem, Quote, Reckoning, SessionInfo } from './types.js';
+import { getSessionInfo, HOUR, sessionEquivalentHours, STANDARD_WINDOW_EQUIV_HOURS } from './calendar.js';
+import { analogScales, findAnalogs, type AnalogFeatures, type AnalogResult } from './analogs.js';
+import { aggregateNews } from './news.js';
+import { assessLiquidity } from './liquidity.js';
+import { selectParams } from './params.js';
+import { reckon } from './reckon.js';
+import { median } from './stats.js';
+import { explainedShare } from './attribute.js';
+import { forecastEvidence, forecastGap } from './forecast.js';
+import { hasAnchor, isAbsurdDrift, isStaleQuote } from './quality.js';
 export interface MarketFrame {ts:number;quotes:Quote[];anchors:Record<string,number>;news:NewsItem[];candles:Record<string,Candle[]>}
 export interface BoardRow extends SnapshotRow {analogs:AnalogResult;features:AnalogFeatures;path:number[]}
 export interface Board {ts:number;session:SessionInfo;news:NewsItem[];rows:BoardRow[];frame:MarketFrame}
@@ -32,7 +32,7 @@ export function computeBoard(data:ArtifactSet,frame:MarketFrame,withAnalogs=true
     const volumes=data.params.expectedVolumes.filter(e=>e.symbol===symbol&&e.windowType===type).sort((a,b)=>Math.abs(a.hourBucket-bucket)-Math.abs(b.hourBucket-bucket));
     const liquidity=assessLiquidity(q,volumes[0]?.median??Math.max(1,q.volumeSinceClose??1),returns[symbol]!);
     const selected=selectParams(p,data.params.buckets[symbol],liquidity.label);
-    const r=reckon({instrument,params:selected,anchorPrice,tokenPrice:q.price,marketFactorReturn:returns[instrument.anchorFactor]!,sectorFactorReturn:sector,newsImpact:impact.impact,newsUncertainty:impact.uncertainty,sessionEquivHours:elapsedEquiv,standardWindowEquivHours:STANDARD_WINDOW_EQUIV_HOURS,liquidity,ts,session,quote:q,newsDrivers:impact.drivers});
+    const r=reckon({instrument,params:selected,anchorPrice,tokenPrice:q.price,marketFactorReturn:returns[instrument.anchorFactor]!,sectorFactorReturn:sector,newsImpact:impact.impact,newsUncertainty:Math.max(impact.uncertainty,data.source==='live'?.002:0),sessionEquivHours:elapsedEquiv,standardWindowEquivHours:STANDARD_WINDOW_EQUIV_HOURS,liquidity,ts,session,quote:q,newsDrivers:impact.drivers});
     const features:AnalogFeatures={absDrift:Math.abs(r.drift),drift:r.drift,explainedShare:explainedShare(r.components),trust:r.trust,windowType:type,sectorKey:instrument.sector,windowProgress:session.windowProgress,realisedVolRegime:1,newsCategory:news.find(n=>n.impact&&n.symbols.includes(symbol))?.category??null};
     const analogs=findAnalogs(features,withAnalogs?data.analogs:[],80,withAnalogs?scales:[1,1,1,1,1]);
     const stale=isStaleQuote(q,ts),forecast=withAnalogs&&session.isDark&&!stale&&!isAbsurdDrift(r.drift)?forecastGap(r,selected,liquidity,analogs):null;

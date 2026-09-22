@@ -96,6 +96,7 @@ export interface NewsItem {
 
 export interface InstrumentParams {
   symbol: Symbol;
+  estimateStability: 'stable' | 'unstable';
   beta: number;                           // gap-beta to anchorFactor
   betaStdErr: number;
   gamma: number;                          // sector loading

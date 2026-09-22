@@ -1,5 +1,5 @@
 // src/data/providers/types.ts
-import type { Quote, Candle, DailyBar, NewsItem, Instrument, Symbol } from "@engine/types";
+import type { Quote, Candle, DailyBar, NewsItem, Instrument, Symbol } from "../../../engine/types.js";
 
 export type ProviderId = "synthetic" | "bitget" | "cache";
 
@@ -9,6 +9,7 @@ export interface ProviderHealth {
   lastSuccessTs: number | null;
   lastErrorTs: number | null;
   lastError: string | null;
+  methods?: Partial<Record<'getUniverse'|'getQuotes'|'getWindowCandles'|'getDailyBars'|'getNews',{ok:boolean;source:ProviderId;lastSuccessTs:number|null;lastErrorTs:number|null;lastError:string|null}>>;
 }
 
 export interface MarketDataProvider {

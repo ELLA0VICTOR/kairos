@@ -19,7 +19,9 @@
 
 Kairos studies the gap between a tokenized stock’s traded price and what observable market, sector and news information can explain while the underlying exchange is closed. It publishes an uncertainty band, estimates the next opening gap, and scores saved forecasts against the opening print.
 
-**Current data is simulated.** Quotes, headlines, history and both ledgers come from a deterministic synthetic provider. The forward ledger’s `live` origin means a forecast was logged prospectively; it does not mean its prices came from a real exchange. Bitget integration is not enabled. Qwen and OpenAI are optional language providers, never the source of displayed market figures.
+**Data modes:** `synthetic` is the default for the full demo experience; `auto` uses live Bitget data when a current real-market bundle is available, with a labelled synthetic fallback.
+
+The Record remains a separate synthetic ledger. Its `live` origin means a forecast was logged prospectively, not that its prices came from an exchange. Real-data research uses measured daily-gap betas and conservative cold-start reversion defaults; real analogs and a calibrated real-market forecast record are not yet available. Qwen and OpenAI are optional language providers, never the source of market figures.
 
 ## The product
 
@@ -81,7 +83,7 @@ In **Vercel → project → Settings → Environment Variables**, create `OPENAI
 
 | Variable | Initial value | Purpose |
 | --- | --- | --- |
-| `VITE_DATA_SOURCE` | `synthetic` | Public. Keep until real-market integration is implemented. |
+| `VITE_DATA_SOURCE` | `synthetic` or `auto` | Public. Full demo or real-data mode with whole-bundle fallback. |
 | `VITE_DATA_BASE` | Leave unset | Public. Uses same-origin `/data/`. |
 | `OPENAI_API_KEY` | Your key, entered in Vercel | **Secret.** Temporary provider while Qwen approval is pending. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Server-only model selection. |
@@ -89,7 +91,7 @@ In **Vercel → project → Settings → Environment Variables**, create `OPENAI
 | `QWEN_BASE_URL` | `https://hackathon.bitgetops.com/v1` | Server-only; this is also the code default. |
 | `QWEN_MODEL` | `qwen3.8-max` | Server-only; this is also the code default. |
 | `QWEN_DAILY_TOKEN_BUDGET` | `30000` | Token guard shared by both providers despite its historical name. `0` pauses language calls. |
-| `BITGET_MCP_URL`, `AGENTKEY_API_KEY` | Leave unset | Reserved integrations, unused in this release. |
+| `BITGET_MCP_URL` | `https://agent.bitget.com/mcp` | Public-data history provider, accessed server-side. |
 
 Selection is **Qwen → OpenAI → deterministic templates**, based on configured keys. Failure of the selected provider returns templates instead of silently charging another provider. Research is capped at six tool calls, forty-five seconds and twenty requests per IP per hour. Rate and token counters are in-memory per warm function instance, **not a durable account-wide spending limit**. Set spending controls in the provider account before sharing a public demo.
 
@@ -99,14 +101,19 @@ Official guidance: [Vercel environment variables](https://vercel.com/docs/enviro
 
 ### After deploying
 
-Verify all five routes, including direct URL loads. Request `/api/quotes?symbols=rNVDA`: expect JSON with `source: "cache"`, `dataSource: "synthetic"` and the saved timestamp. Submit an Ask question and confirm the note identifies the provider and renders engine figures.
+Verify all five routes, including direct URL loads. Request `/api/quotes?symbols=rNVDA`: real responses identify `source: "bitget"` and `dataSource: "live"`; fallback responses identify their saved source and timestamp. Submit an Ask question and confirm the note identifies its language provider and renders engine figures. Quote availability alone does not prove the board has current official-close anchors.
 
-Deployment and deployed Lighthouse measurements are left to the owner. Local audits are not proof of production scores. Release targets are **accessibility ≥95** and **performance ≥90** on Markets and Instrument. The public URL and two successful hosted pipeline runs remain release checks until completed on GitHub/Vercel.
+The deployed site is [kairos-x-nu.vercel.app](https://kairos-x-nu.vercel.app/). Release targets are **accessibility ≥95** and **performance ≥90** on Markets and Instrument. See [release status](docs/phase9-release-status.md) for measured results and outstanding checks; local audits are not proof of production scores.
+
+For auto mode, set `VITE_DATA_SOURCE=auto` in Vercel, **leave `VITE_DATA_BASE` blank**, and redeploy the latest commit. `VITE_DATA_BASE` is an optional asset URL prefix, not a data-mode selector: do not set it to `synthetic` or `auto`. Keep `OPENAI_API_KEY` server-side in Vercel environment variables; never add a `VITE_` prefix or commit the key.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
+    Bitget[Bitget REST quotes and MCP history] --> Real[Separate real-market bundle]
+    Real --> UI
+    Real --> Tools
     Provider[Deterministic synthetic provider] --> Pipeline[Offline TypeScript pipeline]
     Engine[Pure shared engine] --> Pipeline
     Pipeline --> Public[Versioned public/data artifacts]
@@ -144,6 +151,18 @@ npm run pipeline:all
 
 The full rebuild generates history, estimates parameters, constructs analogs, backfills the historical ledger, writes the current snapshot and resolves eligible forward fixes. It writes versioned artifacts to `public/data/` and identical defaults to `src/data/fallback/`. Raw inputs and headline classifications live in ignored `raw/` files.
 
+The real-data path is deliberately separate:
+
+```sh
+npm run audit:bitget
+npm run validate:betas
+npm run pipeline:real
+```
+
+These commands capture underlying history, publish beta validation, and build `public/data/real-market.json` using fresh Bitget quotes. The bundle requires the latest completed official-close date; when it expires or the feed fails, auto mode falls back as a whole. Reversion starts at kappa=0 and sigmaForecast=0.03 with no fitted bucket observations. Unstable beta estimates retain their measured slopes and receive 20% wider uncertainty bands. See [validation and limitations](docs/beta-validation-2026-09-22.md).
+
+The scheduled workflow below refreshes **synthetic** artifacts. Automated refresh of the separate real bundle is not yet implemented; refresh and redeploy it after the official anchor changes. Do not describe auto mode as a continuously maintained real-history pipeline yet.
+
 | Command | Effect |
 | --- | --- |
 | `pipeline:fetch` | Generate the raw historical cache. |
@@ -174,7 +193,7 @@ Headline classifications are cached by hash. Actions restores and saves the cach
 
 ### `GET /api/quotes?symbols=rNVDA,rTSLA`
 
-Returns saved quotes, their actual `asOf` timestamp, `source: "cache"` and the artifact’s `dataSource`. Uses a twenty-second cache with stale-while-revalidate. **Not a live Bitget feed.** An unreadable artifact retains the previous cache when available; otherwise an empty list and explicit notice are returned, never invented prices.
+In auto mode, attempts public Bitget rToken quotes with a twenty-second cache. On failure it returns saved quotes with their actual timestamp and explicit data source. In synthetic mode it uses saved quotes directly. Missing prices are never invented. Research additionally requires a coherent official-close and parameter bundle before using real quotes.
 
 ### `POST /api/ask`
 

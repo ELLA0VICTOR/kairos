@@ -51,7 +51,7 @@ export default function Ask(){
     <p className="panel-prose">Kairos runs the research and writes up what it found. Every number comes from the engine. Only the reasoning is written by the model when it is available.</p>
     <Panel title="What would you like to understand?">
       <form className="flex flex-col gap-4" onSubmit={event=>{event.preventDefault();void submit();}}><Field label="Your research question"><input style={{background:'var(--surface)',color:'var(--bone)',border:'1px solid var(--rule)',padding:'12px',width:'100%'}} aria-label="Your research question" maxLength={1500} value={question} onChange={event=>setQuestion(event.target.value)} placeholder="What is behind the move in rNVDA?" disabled={busy}/></Field><Button className="self-start" variant="primary" type="submit" disabled={busy||!question.trim()}>{busy?'Researching…':'Research'}</Button></form>
-      <div className="instrument-actions">{examples.map(example=><Button key={example} style={{whiteSpace:'normal',textAlign:'left',maxWidth:'100%'}} variant="quiet" disabled={busy} onClick={()=>void submit(example)}>{example}</Button>)}</div>
+      <div className="instrument-actions">{examples.filter(q=>!data.universe.some(i=>q.includes(i.symbol)&&data.params.instruments[i.symbol]?.estimateStability==='unstable')).map(example=><Button key={example} style={{whiteSpace:'normal',textAlign:'left',maxWidth:'100%'}} variant="quiet" disabled={busy} onClick={()=>void submit(example)}>{example}</Button>)}</div>
       <p className="micro-note">Questions stay in this session. Portfolio details are not stored or sent to the language provider.</p>
     </Panel>
     {error&&<p role="status" className="notice">{error}</p>}
